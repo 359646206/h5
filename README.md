@@ -10,4 +10,4 @@
 
 原页面：[萌宠小猫](https://www.workbuddy.link/p/omn71uRlr77BE0I0lWnPTL?source=2)、[时光壁纸](https://www.workbuddy.link/p/FUQSGzGN0aJ4PFYXPFxR4j?source=2)。
 
-雪山湖泊壁纸参考了[新出行的 HarmonyOS 3 时光动态壁纸展示](https://www.xchuxing.com/article/75491?category_id=2)，使用原创雪山湖面素材，随本地时间展示晨曦、白昼、暮色和星夜，也可用页面右下角的时间轴预览。
+雪山湖泊壁纸参考了[新出行的 HarmonyOS 3 时光动态壁纸展示](https://www.xchuxing.com/article/75491?category_id=2)，使用原创写实雪山湖面素材。湖面倒影由 Canvas 逐行位移形成动态波纹，场景随本地时间展示晨曦、白昼、暮色和星夜，也可用页面右下角的时间轴预览。

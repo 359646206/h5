@@ -9,9 +9,10 @@
   * { box-sizing: border-box; }
   html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
   body { background: #071935; color: white; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  #scene, #landscape, #shade, #skyTint, #glow, #clouds, #effects { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #scene, #landscape, #water, #shade, #skyTint, #glow, #clouds, #effects { position: fixed; inset: 0; width: 100%; height: 100%; }
   #scene { overflow: hidden; }
-  #landscape { background: url('./landscape.webp') center center / cover no-repeat; filter: brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); transform: scale(1.025); animation: breathe 35s ease-in-out infinite alternate; }
+  #landscape { background: url('./landscape-v2.webp') center center / cover no-repeat; filter: brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
+  #water { pointer-events: none; filter: brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
   #shade { background: var(--shade, transparent); mix-blend-mode: multiply; }
   #skyTint { background: var(--sky-tint, transparent); mix-blend-mode: screen; }
   #glow { background: radial-gradient(ellipse 23% 21% at 63% 38%, var(--glow, transparent), transparent 85%); mix-blend-mode: screen; }
@@ -29,14 +30,13 @@
   button { border: 1px solid rgba(255,255,255,.35); border-radius: 9px; background: rgba(255,255,255,.12); color: white; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
   button:active { background: rgba(255,255,255,.28); }
   @keyframes drift { to { transform: translateX(17vw); } }
-  @keyframes breathe { to { transform: scale(1.07); } }
   @media (max-width: 600px) { #controls { left: 14px; right: 14px; justify-content: center; gap: 8px; } #period { font-size: 12px; } #slider { flex: 1; } }
-  @media (prefers-reduced-motion: reduce) { #landscape, .cloud { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
 </style>
 </head>
 <body>
 <div id="scene" aria-label="雪山湖泊随时间变化的动态壁纸">
-  <div id="landscape"></div><div id="shade"></div><div id="skyTint"></div><div id="glow"></div>
+  <div id="landscape"></div><canvas id="water"></canvas><div id="shade"></div><div id="skyTint"></div><div id="glow"></div>
   <div id="clouds"><i class="cloud"></i><i class="cloud"></i><i class="cloud"></i></div>
   <canvas id="effects"></canvas>
 </div>
@@ -51,6 +51,10 @@
   const scene = document.getElementById('scene');
   const canvas = document.getElementById('effects');
   const ctx = canvas.getContext('2d');
+  const waterCanvas = document.getElementById('water');
+  const waterCtx = waterCanvas.getContext('2d');
+  const landscape = new Image();
+  landscape.src = './landscape-v2.webp';
   const slider = document.getElementById('slider');
   const timeLabel = document.getElementById('time');
   const periodLabel = document.getElementById('period');
@@ -76,6 +80,7 @@
   let minutes = forcedParts && +forcedParts[1] < 24 && +forcedParts[2] < 60 ? +forcedParts[1] * 60 + +forcedParts[2] : realTime();
   let automatic = !forcedParts;
   let width = 0, height = 0, dpr = 1;
+  let lastWaterFrame = 0;
   const stars = Array.from({ length: 115 }, (_, i) => {
     const seed = Math.sin(i * 9283.1 + 19.7) * 43758.5453;
     const seed2 = Math.sin(i * 2845.3 + 63.4) * 91342.174;
@@ -85,6 +90,7 @@
     width = innerWidth; height = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
     canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    waterCanvas.width = width; waterCanvas.height = height;
   }
   function palette(value) {
     let i = 0;
@@ -111,17 +117,48 @@
         ctx.beginPath(); ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2); ctx.fill();
       });
     }
-    const shimmer = (1 - p.stars * .7) * .18;
-    if (shimmer > .04) {
-      for (let i = 0; i < 32; i++) {
-        const x = (i * 127.31 + (reducedMotion ? 0 : time * .005)) % width;
-        const y = height * (.6 + (i * 19 % 35) / 100);
-        ctx.fillStyle = `rgba(226,247,255,${(shimmer * (i % 3 + 1) / 3).toFixed(3)})`;
-        ctx.fillRect(x, y, 5 + i % 11, .8);
-      }
+  }
+  function drawWater(time) {
+    if (!landscape.complete || !landscape.naturalWidth) return;
+    const scale = Math.max(width / landscape.naturalWidth, height / landscape.naturalHeight);
+    const imageWidth = landscape.naturalWidth * scale;
+    const imageHeight = landscape.naturalHeight * scale;
+    const left = (width - imageWidth) / 2;
+    const top = (height - imageHeight) / 2;
+    const shoreline = Math.max(0, top + imageHeight * .61);
+    waterCtx.clearRect(0, 0, width, height);
+    for (let y = shoreline; y < height; y += 3) {
+      const depth = (y - shoreline) / Math.max(1, height - shoreline);
+      const wave = Math.sin(y * .057 + time * .0013) * (1.5 + depth * 6)
+        + Math.sin(y * .023 - time * .00067) * (1 + depth * 3);
+      const sourceY = (y - top) / scale;
+      waterCtx.globalAlpha = Math.min(1, (y - shoreline) / 24);
+      waterCtx.drawImage(landscape, 0, sourceY, landscape.naturalWidth, 4 / scale,
+        left + wave, y, imageWidth, 4);
+    }
+    waterCtx.globalAlpha = 1;
+    const starAmount = palette(minutes).stars;
+    for (let i = 0; i < 28; i++) {
+      const depth = (i * 47 % 100) / 100;
+      const y = shoreline + (height - shoreline) * (.08 + depth * .85);
+      const x = (i * 137.7 + time * (.004 + depth * .007)) % (width + 100) - 50;
+      const glint = .04 + .09 * (1 - depth) * (1 - starAmount);
+      waterCtx.strokeStyle = `rgba(224,244,255,${glint.toFixed(3)})`;
+      waterCtx.lineWidth = .7;
+      waterCtx.beginPath();
+      waterCtx.moveTo(x, y);
+      waterCtx.quadraticCurveTo(x + 7, y - 1, x + 15 + depth * 14, y);
+      waterCtx.stroke();
     }
   }
-  function frame(time) { render(time); requestAnimationFrame(frame); }
+  function frame(time) {
+    if (!document.hidden && time - lastWaterFrame > 40) {
+      render(time);
+      drawWater(reducedMotion ? 0 : time);
+      lastWaterFrame = time;
+    }
+    requestAnimationFrame(frame);
+  }
   slider.addEventListener('input', () => { automatic = false; minutes = +slider.value; render(performance.now()); });
   document.getElementById('now').addEventListener('click', () => { automatic = true; minutes = realTime(); render(performance.now()); });
   setInterval(() => { if (automatic) minutes = realTime(); }, 15000);
