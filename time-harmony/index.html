@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#071935">
+<title>雪山湖泊 · 时光壁纸</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+  body { background: #071935; color: white; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #scene, #landscape, #shade, #skyTint, #glow, #clouds, #effects { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #scene { overflow: hidden; }
+  #landscape { background: url('./landscape.webp') center center / cover no-repeat; filter: brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); transform: scale(1.025); animation: breathe 35s ease-in-out infinite alternate; }
+  #shade { background: var(--shade, transparent); mix-blend-mode: multiply; }
+  #skyTint { background: var(--sky-tint, transparent); mix-blend-mode: screen; }
+  #glow { background: radial-gradient(ellipse 23% 21% at 63% 38%, var(--glow, transparent), transparent 85%); mix-blend-mode: screen; }
+  #clouds { opacity: var(--cloud-opacity, 0); overflow: hidden; }
+  .cloud { position: absolute; width: 28vw; height: 5vw; min-width: 190px; min-height: 34px; border-radius: 50%; background: rgba(255,255,255,.26); filter: blur(24px); animation: drift 75s linear infinite alternate; }
+  .cloud:nth-child(1) { left: 4%; top: 16%; }
+  .cloud:nth-child(2) { left: 39%; top: 9%; width: 21vw; animation-duration: 100s; animation-direction: alternate-reverse; }
+  .cloud:nth-child(3) { left: 73%; top: 25%; width: 20vw; animation-duration: 85s; }
+  #effects { pointer-events: none; }
+  #controls { position: fixed; right: max(22px, env(safe-area-inset-right)); bottom: max(calc(24px + 100px), calc(env(safe-area-inset-bottom) + 100px)); display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 44px); padding: 10px 14px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px; background: rgba(3,13,29,.45); box-shadow: 0 8px 30px rgba(0,0,0,.15); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); opacity: .78; transition: opacity .2s; }
+  #controls:hover, #controls:focus-within { opacity: 1; }
+  #period { white-space: nowrap; font-size: 13px; letter-spacing: .1em; }
+  #time { min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; font-size: 13px; }
+  #slider { width: min(20vw, 180px); min-width: 72px; accent-color: #dceeff; cursor: pointer; }
+  button { border: 1px solid rgba(255,255,255,.35); border-radius: 9px; background: rgba(255,255,255,.12); color: white; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+  button:active { background: rgba(255,255,255,.28); }
+  @keyframes drift { to { transform: translateX(17vw); } }
+  @keyframes breathe { to { transform: scale(1.07); } }
+  @media (max-width: 600px) { #controls { left: 14px; right: 14px; justify-content: center; gap: 8px; } #period { font-size: 12px; } #slider { flex: 1; } }
+  @media (prefers-reduced-motion: reduce) { #landscape, .cloud { animation: none; } }
+</style>
+</head>
+<body>
+<div id="scene" aria-label="雪山湖泊随时间变化的动态壁纸">
+  <div id="landscape"></div><div id="shade"></div><div id="skyTint"></div><div id="glow"></div>
+  <div id="clouds"><i class="cloud"></i><i class="cloud"></i><i class="cloud"></i></div>
+  <canvas id="effects"></canvas>
+</div>
+<div id="controls">
+  <span id="period">正午</span><span id="time">12:00</span>
+  <input id="slider" type="range" min="0" max="1439" value="720" aria-label="预览一天中的时间">
+  <button id="now" type="button">当前</button>
+</div>
+<script>
+(() => {
+  'use strict';
+  const scene = document.getElementById('scene');
+  const canvas = document.getElementById('effects');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('slider');
+  const timeLabel = document.getElementById('time');
+  const periodLabel = document.getElementById('period');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stops = [
+    { at: 0,    name: '星夜', brightness: .30, saturation: .65, shade: [6, 13, 48, .83], sky: [9, 22, 62, .17], glow: [0, 0, 0, 0], stars: 1, clouds: .06 },
+    { at: 300,  name: '星夜', brightness: .33, saturation: .72, shade: [8, 15, 48, .78], sky: [39, 31, 78, .16], glow: [0, 0, 0, 0], stars: .8, clouds: .08 },
+    { at: 390,  name: '黎明', brightness: .70, saturation: .78, shade: [82, 49, 89, .46], sky: [255, 125, 108, .25], glow: [255, 143, 75, .60], stars: .08, clouds: .21 },
+    { at: 480,  name: '晨光', brightness: .93, saturation: .94, shade: [126, 90, 98, .15], sky: [255, 176, 117, .13], glow: [255, 205, 133, .28], stars: 0, clouds: .36 },
+    { at: 660,  name: '晴昼', brightness: 1, saturation: 1, shade: [0, 0, 0, 0], sky: [0, 0, 0, 0], glow: [0, 0, 0, 0], stars: 0, clouds: .58 },
+    { at: 960,  name: '晴昼', brightness: .97, saturation: 1.02, shade: [0, 0, 0, 0], sky: [255, 223, 166, .04], glow: [255, 224, 174, .08], stars: 0, clouds: .46 },
+    { at: 1080, name: '暮色', brightness: .78, saturation: .92, shade: [79, 41, 77, .32], sky: [255, 126, 85, .27], glow: [255, 149, 78, .48], stars: 0, clouds: .24 },
+    { at: 1170, name: '入夜', brightness: .46, saturation: .73, shade: [20, 19, 59, .68], sky: [91, 49, 113, .18], glow: [241, 103, 99, .18], stars: .48, clouds: .10 },
+    { at: 1290, name: '星夜', brightness: .30, saturation: .65, shade: [6, 13, 48, .83], sky: [9, 22, 62, .17], glow: [0, 0, 0, 0], stars: 1, clouds: .06 },
+    { at: 1440, name: '星夜', brightness: .30, saturation: .65, shade: [6, 13, 48, .83], sky: [9, 22, 62, .17], glow: [0, 0, 0, 0], stars: 1, clouds: .06 }
+  ];
+  const mix = (a, b, t) => a + (b - a) * t;
+  const color = c => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${c[3].toFixed(3)})`;
+  const blend = (a, b, t) => a.map((value, i) => mix(value, b[i], t));
+  const realTime = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const forced = new URLSearchParams(location.search).get('time');
+  const forcedParts = forced && /^(\d{1,2}):(\d{2})$/.exec(forced);
+  let minutes = forcedParts && +forcedParts[1] < 24 && +forcedParts[2] < 60 ? +forcedParts[1] * 60 + +forcedParts[2] : realTime();
+  let automatic = !forcedParts;
+  let width = 0, height = 0, dpr = 1;
+  const stars = Array.from({ length: 115 }, (_, i) => {
+    const seed = Math.sin(i * 9283.1 + 19.7) * 43758.5453;
+    const seed2 = Math.sin(i * 2845.3 + 63.4) * 91342.174;
+    return { x: seed - Math.floor(seed), y: (seed2 - Math.floor(seed2)) * .43, r: .4 + (i % 6) * .14, phase: i * 1.7 };
+  });
+  function resize() {
+    width = innerWidth; height = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function palette(value) {
+    let i = 0;
+    while (i < stops.length - 2 && value >= stops[i + 1].at) i++;
+    const a = stops[i], b = stops[i + 1], t = (value - a.at) / (b.at - a.at);
+    return { name: t < .5 ? a.name : b.name, brightness: mix(a.brightness, b.brightness, t), saturation: mix(a.saturation, b.saturation, t), shade: blend(a.shade, b.shade, t), sky: blend(a.sky, b.sky, t), glow: blend(a.glow, b.glow, t), stars: mix(a.stars, b.stars, t), clouds: mix(a.clouds, b.clouds, t) };
+  }
+  function render(time) {
+    const p = palette(minutes);
+    scene.style.setProperty('--brightness', p.brightness.toFixed(3));
+    scene.style.setProperty('--saturation', p.saturation.toFixed(3));
+    scene.style.setProperty('--shade', color(p.shade));
+    scene.style.setProperty('--sky-tint', `linear-gradient(to bottom, ${color(p.sky)}, transparent 60%)`);
+    scene.style.setProperty('--glow', color(p.glow));
+    scene.style.setProperty('--cloud-opacity', p.clouds.toFixed(3));
+    timeLabel.textContent = `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    periodLabel.textContent = p.name;
+    slider.value = minutes;
+    ctx.clearRect(0, 0, width, height);
+    if (p.stars) {
+      stars.forEach(star => {
+        const twinkle = reducedMotion ? 1 : .72 + .28 * Math.sin(time / 1300 + star.phase);
+        ctx.fillStyle = `rgba(231,240,255,${(p.stars * twinkle * .8).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+    const shimmer = (1 - p.stars * .7) * .18;
+    if (shimmer > .04) {
+      for (let i = 0; i < 32; i++) {
+        const x = (i * 127.31 + (reducedMotion ? 0 : time * .005)) % width;
+        const y = height * (.6 + (i * 19 % 35) / 100);
+        ctx.fillStyle = `rgba(226,247,255,${(shimmer * (i % 3 + 1) / 3).toFixed(3)})`;
+        ctx.fillRect(x, y, 5 + i % 11, .8);
+      }
+    }
+  }
+  function frame(time) { render(time); requestAnimationFrame(frame); }
+  slider.addEventListener('input', () => { automatic = false; minutes = +slider.value; render(performance.now()); });
+  document.getElementById('now').addEventListener('click', () => { automatic = true; minutes = realTime(); render(performance.now()); });
+  setInterval(() => { if (automatic) minutes = realTime(); }, 15000);
+  addEventListener('resize', resize);
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  resize(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
