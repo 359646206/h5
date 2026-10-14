@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html data-page-node-id="SmtqCKNyikJO51aB3nYqVX" lang="zh-CN">
+<head data-page-node-id="eDE70LYQR7rqgj2QbkxvxG">
+<meta data-page-node-id="oNqyvrx5uIsaPvNbRqZ3hE" charset="UTF-8">
+<meta data-page-node-id="Xpc3DqJkslU0UROievGkl9" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<meta data-page-node-id="qrKLIKNeHourTIMWWfQS0l" content="#8fd6ff" name="theme-color">
+<meta data-page-node-id="tmLikrW46hjfvLsGhDVP2h" content="萌宠动态互动壁纸：一只会卖萌的小猫咪，点击它的不同部位或使用下方按钮，触发摸摸、喂食、玩耍、睡觉等可爱反应。" name="description">
+<title data-page-node-id="zrF4aDSWom3heCJikrorJk" data-pnid-children="nQA3fJqvLg2zF6iiOrc9HE">萌宠互动壁纸 · 小猫咪 🐾</title>
+<link data-page-node-id="rRiSWWvoYGVxlzForwu4Dr" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>" rel="icon">
+<style data-page-node-id="c8IfTbU9FFQDqvd0RdZZbS" data-pnid-children="HNDy9XtyuDTQefrEIUJFyV">
+/* ============ 基础 ============ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;touch-action:manipulation;overscroll-behavior:none;
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  user-select:none;-webkit-user-select:none}
+body{position:fixed;inset:0}
+
+/* ============ 场景 ============ */
+#scene{position:fixed;inset:0;overflow:hidden;
+  --fur:#ffb056;--fur-dark:#ef8b2f;--cream:#fff4e3}
+#sky-day{position:absolute;inset:0;z-index:0;
+  background:linear-gradient(180deg,#7ecdf6 0%,#a8e2fb 38%,#d6f2ff 60%,#eafaf3 100%)}
+
+/* 太阳 / 月亮 / 云 */
+#sun{position:absolute;z-index:1;left:74%;top:8%;width:66px;height:66px;border-radius:50%;
+  background:radial-gradient(circle,#fff8b8,#ffd93d);
+  box-shadow:0 0 44px 12px rgba(255,220,90,.75);
+  animation:sunPulse 3.6s ease-in-out infinite;transition:opacity 2s}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 36px 8px rgba(255,220,90,.65)}50%{box-shadow:0 0 56px 16px rgba(255,220,90,.9)}}
+.cloud{position:absolute;z-index:2;background:#fff;opacity:.92;border-radius:60px;animation:cloudMove linear infinite}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%}
+.cloud.c1{width:130px;height:34px;top:9%;animation-duration:55s;animation-delay:-12s}
+.cloud.c2{width:100px;height:28px;top:22%;animation-duration:75s;animation-delay:-40s;opacity:.75}
+.cloud.c3{width:160px;height:40px;top:30%;animation-duration:95s;animation-delay:-60s;opacity:.6}
+.cloud.c1::before{width:52px;height:52px;top:-24px;left:20px}
+.cloud.c1::after{width:38px;height:38px;top:-16px;left:70px}
+.cloud.c2::before{width:40px;height:40px;top:-18px;left:16px}
+.cloud.c2::after{width:28px;height:28px;top:-12px;left:54px}
+.cloud.c3::before{width:62px;height:62px;top:-28px;left:28px}
+.cloud.c3::after{width:44px;height:44px;top:-18px;left:86px}
+@keyframes cloudMove{from{transform:translateX(-35vw)}to{transform:translateX(120vw)}}
+
+/* 山丘与草地 */
+.hill{position:absolute;z-index:3;border-radius:50% 50% 0 0}
+.hill.h1{width:85vw;height:24vh;bottom:44%;left:-16vw;background:#bfe8a6}
+.hill.h2{width:100vw;height:29vh;bottom:44%;right:-34vw;background:#ace096}
+#ground{position:absolute;z-index:4;left:0;right:0;bottom:0;height:44%;
+  background:linear-gradient(180deg,#9de07f,#6dbf5e 70%,#5cae50)}
+.flower{position:absolute;z-index:5;animation:sway 4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-6deg)}to{transform:rotate(7deg)}}
+
+/* 夜幕 */
+#night-veil{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity 2.2s;
+  background:linear-gradient(180deg,rgba(9,20,52,.85),rgba(14,30,68,.62) 60%,rgba(10,40,42,.55))}
+#scene.night #night-veil{opacity:1}
+#scene.night #sun{opacity:0}
+#stars{position:absolute;z-index:7;left:0;right:0;top:0;height:52%;pointer-events:none;opacity:0;transition:opacity 2.2s}
+#scene.night #stars{opacity:1}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+#moon{position:absolute;z-index:7;right:14%;top:9%;width:48px;height:48px;border-radius:50%;opacity:0;transition:opacity 2.2s;
+  background:radial-gradient(circle at 38% 35%,#ffffff,#d8d8ec 70%,#bcbcd8);
+  box-shadow:0 0 26px 6px rgba(230,235,255,.45)}
+#scene.night #moon{opacity:1}
+#moon i{position:absolute;border-radius:50%;background:rgba(160,160,190,.4)}
+#moon i:nth-child(1){width:10px;height:10px;left:11px;top:20px}
+#moon i:nth-child(2){width:7px;height:7px;left:27px;top:11px}
+#moon i:nth-child(3){width:6px;height:6px;left:25px;top:30px}
+
+/* ============ 小猫 ============ */
+#pet-wrap{position:absolute;z-index:10;bottom:12.5%;left:50%;
+  width:clamp(200px,48vmin,330px);aspect-ratio:1/1;pointer-events:none}
+#cat-move{position:absolute;inset:0;z-index:2}
+#cat{width:100%;height:100%;display:block;pointer-events:none;
+  animation:breathe 3.6s ease-in-out infinite;transform-origin:50% 96%;
+  filter:drop-shadow(0 6px 9px rgba(0,0,0,.10))}
+#cat.sleeping{animation-duration:6.5s}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.02,1.035)}}
+.cat-shadow{position:absolute;z-index:1;left:10%;right:10%;bottom:-3%;height:9%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(0,0,0,.20),transparent 80%);
+  transform-origin:50% 100%;transition:transform .2s}
+#cat-move.bouncing ~ .cat-shadow,#cat-move.startled ~ .cat-shadow{transform:scaleX(1.12) scaleY(.5)}
+#cat-move.eating ~ .cat-shadow{transform:scaleX(1.05) scaleY(.85)}
+
+/* 猫身各部件 */
+#tail{transform-box:view-box;transform-origin:148px 152px;animation:tailWag 2.6s ease-in-out infinite}
+@keyframes tailWag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(15deg)}}
+#cat.happy #tail,#cat.petting #tail{animation-duration:.5s}
+#cat.sleeping #tail{animation-duration:7s}
+#head{transform-box:view-box;transform-origin:100px 106px;transition:transform .35s ease}
+#cat.petting #head{transform:rotate(8deg)}
+#cat.eating #head{transform:rotate(14deg) translateY(4px)}
+.earL,.earR{transform-box:fill-box;transition:transform .15s}
+.earL{transform-origin:80% 100%}
+.earR{transform-origin:20% 100%}
+#cat.twitch .earL{animation:earTwL .45s ease}
+#cat.twitch .earR{animation:earTwR .45s ease}
+@keyframes earTwL{0%,100%{transform:rotate(0)}40%{transform:rotate(-14deg)}70%{transform:rotate(4deg)}}
+@keyframes earTwR{0%,100%{transform:rotate(0)}40%{transform:rotate(14deg)}70%{transform:rotate(-4deg)}}
+#cat.startled .earL{transform:rotate(-22deg)}
+#cat.startled .earR{transform:rotate(22deg)}
+
+.eyes-open{transform-box:fill-box;transform-origin:center;transition:transform .08s}
+#cat.blink .eyes-open{transform:scaleY(.06)}
+.eyes-happy,.eyes-sleep,#mouth-open{visibility:hidden}
+#cat.happy .eyes-open,#cat.happy .eyes-sleep{visibility:hidden}
+#cat.happy .eyes-happy{visibility:visible}
+#cat.sleeping .eyes-open,#cat.sleeping .eyes-happy{visibility:hidden}
+#cat.sleeping .eyes-sleep{visibility:visible}
+#cat.eating #mouth-omega,#cat.meow #mouth-omega{visibility:hidden}
+#cat.eating #mouth-open,#cat.meow #mouth-open{visibility:visible}
+#mouth-open{transform-box:fill-box;transform-origin:50% 15%}
+#cat.eating #mouth-open{animation:chew .28s ease-in-out infinite}
+#cat.meow #mouth-open{animation:chew .5s ease}
+@keyframes chew{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.3)}}
+
+/* 配色（通过 CSS 变量换毛色） */
+#cat .fur{fill:var(--fur)}
+#cat .fur-line{stroke:var(--fur-dark);fill:none}
+#cat .fur-stroke{stroke:var(--fur)}
+#cat .dark-stroke{stroke:var(--fur-dark)}
+#cat .cream{fill:var(--cream)}
+
+/* ============ 状态动作 ============ */
+#cat-move.bouncing{animation:hop .55s ease 3}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(-18px) scale(.97,1.05)}70%{transform:translateY(0) scale(1.05,.93)}85%{transform:translateY(-5px)}}
+#cat-move.startled{animation:startle .8s ease}
+@keyframes startle{0%{transform:translateY(0) scale(1)}25%{transform:translateY(-38px) scale(.94,1.1)}55%{transform:translateY(0) scale(1.1,.88)}75%{transform:translateY(-9px)}100%{transform:translateY(0)}}
+#cat-move.tickle{animation:tickleW .32s ease 5}
+@keyframes tickleW{0%,100%{transform:rotate(0)}25%{transform:rotate(4deg) translateX(5px)}75%{transform:rotate(-4deg) translateX(-5px)}}
+#cat-move.purring{animation:purrW .6s ease 3}
+@keyframes purrW{0%,100%{transform:rotate(0)}50%{transform:rotate(2.5deg) translateY(2px)}}
+#cat-move.walking{animation:waddle .5s ease-in-out infinite}
+@keyframes waddle{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg) translateY(-7px)}}
+#cat-move.poke{animation:pokeP .18s ease}
+@keyframes pokeP{50%{transform:scale(.93,1.04)}}
+#cat-move.eating{transform:translateY(9px) rotate(4deg);transition:transform .3s}
+#cat.rolling{animation:rollAnim 1.4s ease}
+@keyframes rollAnim{0%{transform:translateX(0) rotate(0)}20%{transform:translateX(-28px) rotate(-100deg) scale(1.05)}50%{transform:translateX(26px) rotate(-190deg)}80%{transform:translateX(-10px) rotate(-280deg) scale(1.05)}100%{transform:translateX(0) rotate(-360deg)}}
+
+/* ============ 点击热区 ============ */
+.zone{position:absolute;pointer-events:auto;cursor:pointer;z-index:8}
+.zone-head{top:0;left:16%;right:16%;height:50%}
+.zone-body{top:50%;left:16%;right:28%;height:48%}
+.zone-tail{top:38%;right:1%;width:31%;height:42%}
+
+/* ============ 气泡 ============ */
+#bubble{position:absolute;top:-36px;left:50%;transform:translateX(-50%) scale(0);transform-origin:50% 100%;
+  background:#fff;border:2.5px solid #ffd9e6;border-radius:16px;padding:7px 12px;
+  font-size:13.5px;font-weight:700;color:#8a4a3a;white-space:nowrap;z-index:12;pointer-events:none;
+  box-shadow:0 3px 8px rgba(190,95,125,.18);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+#bubble.show{transform:translateX(-50%) scale(1)}
+#bubble::after{content:'';position:absolute;bottom:-9px;left:50%;margin-left:-7px;
+  border:7px solid transparent;border-top-color:#ffd9e6;border-bottom:0}
+
+/* ============ 特效粒子 ============ */
+.fx{position:fixed;z-index:15;pointer-events:none;white-space:nowrap}
+.heart{animation:heartFloat var(--t,1.4s) ease-out forwards}
+@keyframes heartFloat{0%{transform:translate(-50%,0) scale(.4);opacity:0}15%{opacity:1;transform:translate(-50%,-14px) scale(1)}100%{transform:translate(calc(-50% + var(--dx,0px)),-120px) scale(.7);opacity:0}}
+.heart.burst{animation:burstFly var(--t,1.2s) ease-out forwards}
+@keyframes burstFly{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}10%{opacity:1}100%{transform:translate(calc(-50% + var(--bx,0px)),calc(-50% + var(--by,-100px))) scale(.8);opacity:0}}
+.zzz{animation:zFloat 2.6s ease-out forwards}
+@keyframes zFloat{0%{transform:translate(0,0) scale(.5) rotate(0);opacity:0}20%{opacity:.95}100%{transform:translate(48px,-84px) scale(1.2) rotate(12deg);opacity:0}}
+.petal{top:-6vh;opacity:0}
+.petal.p-fall{animation:petalFall var(--t,7s) linear forwards}
+@keyframes petalFall{0%{opacity:0;transform:translateY(0) rotate(0)}8%{opacity:.9}100%{opacity:0;transform:translateY(108vh) rotate(320deg)}}
+.petal.p-fly{animation:fireflyDrift var(--t,7s) ease-in-out forwards;text-shadow:0 0 8px #fff8a0}
+@keyframes fireflyDrift{0%{opacity:0;transform:translate(0,0)}12%{opacity:1}45%{opacity:.25;transform:translate(26px,48vh)}75%{opacity:1;transform:translate(-14px,78vh)}100%{opacity:0;transform:translate(8px,104vh)}}
+.fish{animation:fishFall .8s ease-in forwards}
+@keyframes fishFall{from{transform:translateY(-80px) rotate(-24deg)}to{transform:translateY(0) rotate(-8deg)}}
+.fish.gone{transition:transform .55s ease-in,opacity .55s;transform:scale(0) rotate(40deg)!important;opacity:0}
+.hand{animation:handStroke 1.9s ease forwards;font-size:40px}
+@keyframes handStroke{0%{transform:translate(34px,-72px) rotate(24deg);opacity:0}12%{opacity:1;transform:translate(0,-18px) rotate(-14deg)}30%{transform:translate(0,5px) rotate(-4deg)}45%{transform:translate(0,-18px) rotate(-14deg)}60%{transform:translate(0,5px) rotate(-4deg)}78%{transform:translate(0,-16px) rotate(-12deg)}100%{transform:translate(26px,-64px) rotate(24deg);opacity:0}}
+.yarn{position:absolute;left:-18%;bottom:23%;font-size:38px;z-index:9;pointer-events:none;animation:yarnPlay 3s ease-in-out forwards}
+@keyframes yarnPlay{0%{left:-22%;bottom:30%;opacity:0;transform:rotate(0)}8%{opacity:1}22%{left:16%;bottom:44%}36%{left:34%;bottom:26%}50%{left:52%;bottom:44%}64%{left:70%;bottom:26%}85%{left:96%;opacity:1}100%{left:112%;bottom:34%;opacity:0;transform:rotate(660deg)}}
+
+/* ============ HUD / 提示 / 按钮坞 ============ */
+#hud{position:fixed;top:14px;left:14px;z-index:26;display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:7px 12px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.1);font-size:15px}
+#mood-bar{width:88px;height:10px;border-radius:999px;background:rgba(0,0,0,.09);overflow:hidden}
+#mood-fill{height:100%;width:35%;border-radius:999px;background:linear-gradient(90deg,#ff9ab8,#ff5d7e);transition:width .4s}
+#mood-fill.max{background:linear-gradient(90deg,#ffd76e,#ff9d5c,#ff5d7e);animation:maxGlow .9s ease-in-out infinite alternate}
+@keyframes maxGlow{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+#hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:26;
+  background:rgba(255,255,255,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:8px 16px;border-radius:999px;font-size:13px;color:#7a5648;font-weight:600;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);transition:opacity .9s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#hint.hide{opacity:0}
+#dock{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  z-index:26;display:flex;gap:9px;flex-wrap:wrap;justify-content:center;max-width:96vw}
+#dock button{width:57px;height:62px;border:none;border-radius:18px;cursor:pointer;
+  background:rgba(255,255,255,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 3px 10px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .15s,background .2s;font-family:inherit}
+#dock button:active{transform:scale(.86)}
+#dock button .ic{font-size:22px;line-height:1}
+#dock button .tx{font-size:11px;color:#7a5648;font-weight:700}
+#dock button.on{background:#ffe3ee}
+</style>
+</head>
+<body data-page-node-id="n28dbPC87SY6MFElrzrjup">
+<div data-page-node-id="cyNqbeoanOzRgHimoLTutH" id="scene">
+  <div data-page-node-id="CPCw7Pvq14pjboKo0zE4BQ" id="sky-day"></div>
+  <div data-page-node-id="DnXzpFN2Ey9SlKXjmg2n6W" id="sun"></div>
+  <div data-page-node-id="S1JclItXweh4rGn9GrWdUP" class="cloud c1"></div>
+  <div data-page-node-id="Ja4QJ0MR9oFHyNA0t9egoi" class="cloud c2"></div>
+  <div data-page-node-id="MUMIzzEzKK8WEgNrvCOZKY" class="cloud c3"></div>
+  <div data-page-node-id="nx5iTHQWKEocXPRzN5bDft" class="hill h1"></div>
+  <div data-page-node-id="4YH90UEci94YPLakn7U3uf" class="hill h2"></div>
+  <div data-page-node-id="9z0eoOGLYwFPURChM7t2bG" id="ground"></div>
+
+  <!--pnid:JXB5YC4PO7mC7fta0AJ3su--><!-- 花草 -->
+  <span data-page-node-id="EBMnlwuvL7OinEu4oG62Sf" class="flower" style="left:6%; bottom:7%; font-size:26px"><!--pnid:5xFbzTzyhC2ce3yfl4LW8E-->🌼</span>
+  <span data-page-node-id="JY3ttf4uwC6TIvzxhrDyeY" class="flower" style="left:15%; bottom:3%; font-size:20px; animation-delay:-1s"><!--pnid:Xo1w698WBL8xDajbU7LCr3-->🌷</span>
+  <span data-page-node-id="P5QS7UIk2NsOUwXhVaIVuO" class="flower" style="left:26%; bottom:10%; font-size:22px; animation-delay:-2s"><!--pnid:02n4wTz3TAFSm0IZ8NBbeX-->🌿</span>
+  <span data-page-node-id="ocSKzpHG1LP4Wd3ANQCjNn" class="flower" style="left:64%; bottom:4%; font-size:24px; animation-delay:-.5s"><!--pnid:RFck7mkQwSHESMRVzchSHV-->🌸</span>
+  <span data-page-node-id="QliCHWJFlSwpXr1LdZK47i" class="flower" style="left:82%; bottom:9%; font-size:27px; animation-delay:-1.6s"><!--pnid:gphNPF9cUN0M1yEZXrw8wB-->🌻</span>
+  <span data-page-node-id="yC5pPlnA2B4XGfHBkxrbga" class="flower" style="left:92%; bottom:3%; font-size:19px; animation-delay:-2.4s"><!--pnid:d0uLl3DeSasmjP6oHrpkwT-->🌿</span>
+
+  <div data-page-node-id="CJKPPNoPlN70WrQWDEDMn6" id="night-veil"></div>
+  <div data-page-node-id="M7GBANrlyh616LVh2atWCY" id="stars"></div>
+  <div data-page-node-id="99VZGoreDlBes6rfIzHAzZ" id="moon"><i data-page-node-id="2az3jZ1iaXWPEq4p3KSxVm"></i><i data-page-node-id="crZ0sdTqN8U3pPhRF165V4"></i><i data-page-node-id="OGmitRZ18yc3NLCIaAKJ9B"></i></div>
+
+  <!--pnid:BQGHqyXbLh6mvyZU7fin1A--><!-- 小猫 -->
+  <div data-page-node-id="EnGUBGgOrbNBhVmXbOxsY3" id="pet-wrap">
+    <div data-page-node-id="Qq6WWzAOXmBE3xa24lYQqj" id="cat-move">
+      <svg data-page-node-id="e46pvPKbpwqjlRBCRPj4HR" aria-label="小猫咪" id="cat" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <!--pnid:klpt0LJKaO9afLqDmLVpPH--><!-- 尾巴 -->
+        <g data-page-node-id="d49pdShtzJ0vTvQTJwRbUm" id="tail">
+          <path data-page-node-id="plOCn2m2LWxxb2MG1jYk8L" class="fur-stroke" d="M146 152 Q192 146 188 102 Q186 86 172 92" fill="none" stroke-linecap="round" stroke-width="13"/>
+          <path data-page-node-id="Tt0RV9Sb2o8jCHdwmhrONr" class="dark-stroke" d="M188 102 Q186 86 172 92" fill="none" stroke-linecap="round" stroke-width="13"/>
+        </g>
+        <!--pnid:TeCFc8JcXbnEc8lZJX0NKS--><!-- 身体 -->
+        <ellipse data-page-node-id="9ZL7AMjaUPdd5SErlZxM2E" class="fur" cx="100" cy="152" rx="54" ry="44"/>
+        <ellipse data-page-node-id="5MjyWnHN1gMT5FfKBNADUa" class="fur" cx="52" cy="192" rx="15" ry="10"/>
+        <ellipse data-page-node-id="tC3FObXqn7xvV6d3B5Ap1i" class="fur" cx="148" cy="192" rx="15" ry="10"/>
+        <ellipse data-page-node-id="cIrZkHptaltZqib0k50Aza" class="cream" cx="100" cy="160" rx="30" ry="27"/>
+        <path data-page-node-id="eJddo82kZNq3ZfWPFivbJM" class="fur-line" d="M46 136 q7 3 13 2" stroke-linecap="round" stroke-width="5"/>
+        <path data-page-node-id="P0eWNjMP482OPW3nDvv59e" class="fur-line" d="M43 150 q8 3 14 1" stroke-linecap="round" stroke-width="5"/>
+        <path data-page-node-id="IpRv3HcIb6aDqstWLE9W54" class="fur-line" d="M154 136 q-7 3 -13 2" stroke-linecap="round" stroke-width="5"/>
+        <path data-page-node-id="w7iL3eQV2KfT9qGRh03At8" class="fur-line" d="M157 150 q-8 3 -14 1" stroke-linecap="round" stroke-width="5"/>
+        <!--pnid:oj8MnMcqfUTojcf1AUXZ0P--><!-- 前爪 -->
+        <ellipse data-page-node-id="hqvNcVashKLKd5EBv1b6cs" class="fur" cx="76" cy="190" rx="13" ry="10"/>
+        <ellipse data-page-node-id="q7UvXEg49MxlvXtsT4K8Bk" class="fur" cx="124" cy="190" rx="13" ry="10"/>
+        <path data-page-node-id="0yDMGo5HpiCXx3wh5HyQea" class="fur-line" d="M72 185 v6 M80 185 v6" stroke-linecap="round" stroke-width="2"/>
+        <path data-page-node-id="CtWF6W3lDn6xT5JgJGUdVr" class="fur-line" d="M120 185 v6 M128 185 v6" stroke-linecap="round" stroke-width="2"/>
+        <!--pnid:1aLUxuZgI7a7KRIfCFDUu1--><!-- 头部 -->
+        <g data-page-node-id="FEpBzTgAuOXvJKSY1eusl3" id="head">
+          <path data-page-node-id="IXn52vufD2aEvx5XEa0sgF" class="fur" d="M62 40 L48 4 L92 18 Z"/>
+          <path data-page-node-id="t3HzDfR8AWbl1ZIqETkAsT" d="M63 32 L56 13 L81 21 Z" fill="#ff9eaa"/>
+          <path data-page-node-id="IJ2CUsibjgwR7wKrz7DduZ" class="fur" d="M138 40 L152 4 L108 18 Z"/>
+          <path data-page-node-id="LizdESVFSxcr0LiQzCs4kO" d="M137 32 L144 13 L119 21 Z" fill="#ff9eaa"/>
+          <circle data-page-node-id="PyRpQyW4BlsqvxVkS26LfR" class="fur" cx="100" cy="66" r="47"/>
+          <path data-page-node-id="aWGweMWXs63wu4GBZp0NWg" class="fur-line" d="M92 27 q-3 8 -1 12" stroke-linecap="round" stroke-width="4"/>
+          <path data-page-node-id="AoR6gEC8VAlrD4M4DsfCcl" class="fur-line" d="M101 25 q0 9 0 13" stroke-linecap="round" stroke-width="4"/>
+          <path data-page-node-id="FGej1AaOfoyTMCwksXuSX1" class="fur-line" d="M110 27 q3 8 1 12" stroke-linecap="round" stroke-width="4"/>
+          <!--pnid:vztV98vuG8MWwYCAi7PJ1f--><!-- 眼睛 -->
+          <g data-page-node-id="ZYhYuYMHPtTp2VXqsYycJW" class="eyes-open">
+            <circle data-page-node-id="litYlTQWePRI0vnrJMeNJ7" cx="80" cy="68" fill="#4a3226" r="9.5"/>
+            <circle data-page-node-id="PGRGt2e2ryHTa1TLtTQof6" cx="120" cy="68" fill="#4a3226" r="9.5"/>
+            <circle data-page-node-id="U3mW6lsBHjUnOOj55jrA1g" cx="83" cy="64.5" fill="#fff" r="3"/>
+            <circle data-page-node-id="yfGBxnvQZc3AUksf5mcKKI" cx="123" cy="64.5" fill="#fff" r="3"/>
+            <circle data-page-node-id="GD7SvEwSeTVww3LxTf2wZk" cx="76.5" cy="71.5" fill="#fff" opacity=".85" r="1.8"/>
+            <circle data-page-node-id="gzJz3i4vzT2ZK9BX9UVsZR" cx="116.5" cy="71.5" fill="#fff" opacity=".85" r="1.8"/>
+          </g>
+          <g data-page-node-id="QdRh7KFgbrznRy1qzHGpUY" class="eyes-happy">
+            <path data-page-node-id="gOf2ZuDfUibSNUkhqCtbzg" d="M70 68 Q80 78 90 68" fill="none" stroke="#4a3226" stroke-linecap="round" stroke-width="4.5"/>
+            <path data-page-node-id="sRtDUzP1lA3q4ladJ7DeAe" d="M110 68 Q120 78 130 68" fill="none" stroke="#4a3226" stroke-linecap="round" stroke-width="4.5"/>
+          </g>
+          <g data-page-node-id="bqPptL5lWjNwgRUXvIeFij" class="eyes-sleep">
+            <path data-page-node-id="iA18v29Js0ZbVoksqNg3uT" d="M70 69 Q80 74 90 71" fill="none" stroke="#4a3226" stroke-linecap="round" stroke-width="4"/>
+            <path data-page-node-id="hJcDmaLrv14IuOi0EWLZbC" d="M110 69 Q120 74 130 71" fill="none" stroke="#4a3226" stroke-linecap="round" stroke-width="4"/>
+          </g>
+          <!--pnid:gpiuRw8Owc4nf6jutTim2h--><!-- 腮红 / 鼻子 / 嘴 -->
+          <ellipse data-page-node-id="KqzozGK8v1wiPJmSH6L9TK" cx="66" cy="84" fill="#ff9eaa" opacity=".55" rx="9" ry="5.5"/>
+          <ellipse data-page-node-id="cxR8fwf5Sxn74lM3NsH2r6" cx="134" cy="84" fill="#ff9eaa" opacity=".55" rx="9" ry="5.5"/>
+          <path data-page-node-id="9yZdoeeWZpgPP5WyiH9idK" d="M96 79 Q100 76 104 79 Q102 86 100 86 Q98 86 96 79 Z" fill="#ff8fa3"/>
+          <g data-page-node-id="MPC7hWEEG088uKAgwRtpjA" id="mouth-omega">
+            <path data-page-node-id="yBA03N6ByywVwHn1NV1XmE" d="M88 88 Q94 94 100 88 Q106 94 112 88" fill="none" stroke="#4a3226" stroke-linecap="round" stroke-width="3"/>
+          </g>
+          <g data-page-node-id="Twzkm68Aj2ujNYs5sY6x4P" id="mouth-open">
+            <ellipse data-page-node-id="mE4hwTskUt8otZZMoPimOb" cx="100" cy="93" fill="#e2554f" rx="8.5" ry="7"/>
+            <ellipse data-page-node-id="oHYkhuhNDHwAbGqHCOyB6a" cx="100" cy="96.5" fill="#ff9eaa" rx="5" ry="3.5"/>
+          </g>
+          <!--pnid:09JZgDp7tUMCCNt8LNXhQO--><!-- 胡须 -->
+          <g data-page-node-id="80MDDWlNIBlezcHx9tlYjR" stroke="rgba(170,120,85,.55)" stroke-linecap="round" stroke-width="2">
+            <path data-page-node-id="TjJlEkALp5L6D5X5d2NYGT" d="M56 76 L28 70 M55 82 L26 82 M56 88 L28 94"/>
+            <path data-page-node-id="3Gcnnm7OIGx1Xh2EI5cWbs" d="M144 76 L172 70 M145 82 L174 82 M144 88 L172 94"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div data-page-node-id="ybLnKI2yKVFfMu7CHa49uL" class="cat-shadow"></div>
+    <div data-page-node-id="gKLk6vPyLLTwpVmId6pqu1" id="bubble"></div>
+    <div data-page-node-id="mFqX3EBXyJtuRHPvAFqled" class="zone zone-head" data-zone="head"></div>
+    <div data-page-node-id="8XRGXve0L8Utuc4bLq0VFF" class="zone zone-body" data-zone="body"></div>
+    <div data-page-node-id="5XydifT4VP8hstX61QdYgg" class="zone zone-tail" data-zone="tail"></div>
+  </div>
+
+  <div data-page-node-id="1ip5UisqSsDpDARPM1mtf2" id="hud"><!--pnid:3rY54VI13Wbe7q430LXmmf-->❤️<div data-page-node-id="TJqfoGkrIxv6KPLKXltZLf" id="mood-bar"><div data-page-node-id="0HwDC7VznmoCpZ132f641k" id="mood-fill"></div></div></div>
+  <div data-page-node-id="2qbJbI0leTBErlTTjpweEM" id="hint"><!--pnid:AclK5mHVX3McX2xb9Niuex-->🐾 点一点小猫的头、身体、尾巴，会有不同反应哦 🐾</div>
+  <div data-page-node-id="1cfMnb7A5R3uNMGSInHxe8" id="dock">
+    <button data-page-node-id="uPmVDLRs4Ftig6uQoPIHhc" data-act="pet"><span data-page-node-id="J9jBJgoKQc9PTXdPVjZbnw" class="ic"><!--pnid:iVyuaLpVeycmt9xIFrKuMY-->🖐</span><span data-page-node-id="90hpG1CR1lkEGRr9DMNQZT" class="tx"><!--pnid:3HtmIBARjeejUFYISnfnue-->摸摸</span></button>
+    <button data-page-node-id="MrQRNsrf1Ydackx4tUKquH" data-act="feed"><span data-page-node-id="5flfTU5BGdzBxPenpR8QCm" class="ic"><!--pnid:AeTSaOHzXbJuekcDorkbQY-->🐟</span><span data-page-node-id="auvy3RDqqmq5uoQZsx70KD" class="tx"><!--pnid:lZ9AwPV6ifLsB78EZmyBEp-->喂食</span></button>
+    <button data-page-node-id="CLndZ1GXSihg5fW3tZBwPT" data-act="play"><span data-page-node-id="0R75ZyaP5MNYlkVii6S6N3" class="ic"><!--pnid:IXEnXXzSwAhEgALeRjGyqj-->🧶</span><span data-page-node-id="G3siRPcpoSvkIkAWbrg0oq" class="tx"><!--pnid:9RLMzXyG85Ed48Y01hf01w-->玩耍</span></button>
+    <button data-page-node-id="k3PNSfX9j1RLcmfGaiHrLV" data-act="sleep" id="btn-sleep"><span data-page-node-id="0ytkfx1t6HTBU1oHu3skhc" class="ic"><!--pnid:w5OmBQ1O9POUvRk6m9ojTz-->😴</span><span data-page-node-id="rlNCcFiLa3RmbY3LgW14K6" class="tx"><!--pnid:kVYvmsvWfxzL84rCCWikxC-->睡觉</span></button>
+    <button data-page-node-id="4I5Ocs9rkuStwcMx8C3jyl" data-act="color"><span data-page-node-id="trpBwRoyU0ZI7P7UmhgrOE" class="ic"><!--pnid:e6eZvDZfzOK2CPEhPE5AnY-->🎨</span><span data-page-node-id="aDILr1taMu8HLpYOUcaJZ8" class="tx"><!--pnid:gzUXE3MljbC1s577wHodtk-->换装</span></button>
+    <button data-page-node-id="SecCq0vRPCFflyrVC5p65m" data-act="sound" id="btn-sound"><span data-page-node-id="kxuQ2UFrdgJ7N1LrHaZn5P" class="ic"><!--pnid:WtmZMkHlTgs2bwMIUk9KxA-->🔇</span><span data-page-node-id="0zQxgqIIfZcQzxPsDN3VlY" class="tx"><!--pnid:9XHNcMLhCif9JEiYRhZdoJ-->声音</span></button>
+  </div>
+</div>
+
+<script data-page-node-id="65Ezu6U9H9gXtKhsieOb0a" data-pnid-children="P4f96nTnRjNx1EQUEVB1B4">
+(function(){
+"use strict";
+var scene=document.getElementById('scene');
+var wrap=document.getElementById('pet-wrap');
+var move=document.getElementById('cat-move');
+var cat=document.getElementById('cat');
+var bubbleEl=document.getElementById('bubble');
+var moodFill=document.getElementById('mood-fill');
+var hint=document.getElementById('hint');
+var btnSleep=document.getElementById('btn-sleep');
+var btnSound=document.getElementById('btn-sound');
+
+var busy=false, sleeping=false, soundOn=false;
+var mood=35, maxed=false, posX=50, themeIdx=0, colorIdx=0;
+var zzzTimer=null, bubbleTimer=null;
+
+function rnd(a,b){return a+Math.random()*(b-a);}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+/* ---------- 声音（WebAudio 合成，无外部资源） ---------- */
+var actx=null;
+function ensureCtx(){
+  if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC();}
+  if(actx&&actx.state==='suspended')actx.resume();
+}
+function meow(){
+  if(!soundOn||!actx&&!window.AudioContext&&!window.webkitAudioContext)return;
+  ensureCtx();if(!actx)return;
+  var t=actx.currentTime;
+  var o=actx.createOscillator(),g=actx.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(420,t);
+  o.frequency.exponentialRampToValueAtTime(780,t+.1);
+  o.frequency.exponentialRampToValueAtTime(500,t+.28);
+  o.frequency.exponentialRampToValueAtTime(300,t+.42);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.16,t+.06);
+  g.gain.setValueAtTime(.13,t+.3);
+  g.gain.exponentialRampToValueAtTime(.001,t+.5);
+  var v=actx.createOscillator(),vg=actx.createGain();
+  v.frequency.value=14;vg.gain.value=12;
+  v.connect(vg);vg.connect(o.frequency);
+  v.start(t);v.stop(t+.5);
+  o.connect(g);g.connect(actx.destination);
+  o.start(t);o.stop(t+.55);
+  cat.classList.add('meow');
+  setTimeout(function(){cat.classList.remove('meow');},520);
+}
+function purr(){
+  if(!soundOn)return;ensureCtx();if(!actx)return;
+  var t=actx.currentTime;
+  var o=actx.createOscillator(),g=actx.createGain();
+  o.type='triangle';o.frequency.value=52;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(.2,t+.15);
+  g.gain.setValueAtTime(.2,t+1.1);
+  g.gain.linearRampToValueAtTime(0,t+1.6);
+  var lfo=actx.createOscillator(),lg=actx.createGain();
+  lfo.frequency.value=24;lg.gain.value=.1;
+  lfo.connect(lg);lg.connect(g.gain);
+  lfo.start(t);lfo.stop(t+1.6);
+  o.connect(g);g.connect(actx.destination);
+  o.start(t);o.stop(t+1.65);
+}
+function nom(){
+  if(!soundOn)return;ensureCtx();if(!actx)return;
+  var t=actx.currentTime;
+  [0,.18,.36].forEach(function(d,i){
+    var o=actx.createOscillator(),g=actx.createGain();
+    o.type='square';o.frequency.setValueAtTime(190+i*30,t+d);
+    g.gain.setValueAtTime(.001,t+d);
+    g.gain.linearRampToValueAtTime(.1,t+d+.03);
+    g.gain.exponentialRampToValueAtTime(.001,t+d+.12);
+    o.connect(g);g.connect(actx.destination);
+    o.start(t+d);o.stop(t+d+.14);
+  });
+}
+function chirp(){
+  if(!soundOn)return;ensureCtx();if(!actx)return;
+  var t=actx.currentTime;
+  var o=actx.createOscillator(),g=actx.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(660,t);
+  o.frequency.exponentialRampToValueAtTime(990,t+.16);
+  g.gain.setValueAtTime(.12,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.2);
+  o.connect(g);g.connect(actx.destination);
+  o.start(t);o.stop(t+.22);
+}
+
+/* ---------- 工具 ---------- */
+function bubble(text,dur){
+  bubbleEl.textContent=text;
+  bubbleEl.classList.add('show');
+  clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(function(){bubbleEl.classList.remove('show');},dur||1700);
+}
+function catAnchor(){
+  var r=wrap.getBoundingClientRect();
+  return {x:r.left+r.width/2,y:r.top+r.height*.45,r:r};
+}
+function spawnFx(cls,txt,x,y,style){
+  var s=document.createElement('span');
+  s.className='fx '+cls;
+  s.textContent=txt;
+  s.style.left=x+'px';
+  s.style.top=y+'px';
+  if(style)for(var k in style)s.style.setProperty(k,style[k]);
+  document.body.appendChild(s);
+  var life=parseFloat(getComputedStyle(s).getPropertyValue('--t'))||1.5;
+  setTimeout(function(){s.remove();},(life+.4)*1000);
+  return s;
+}
+var HEARTS=['💕','💖','💗','❤️','✨'];
+function spawnHearts(n,x,y){
+  for(var i=0;i<n;i++){
+    (function(i){
+      setTimeout(function(){
+        var s=spawnFx('heart',pick(HEARTS),x+rnd(-34,34),y+rnd(-18,26),{
+          '--dx':rnd(-46,46)+'px','--t':rnd(1.1,1.7)+'s','font-size':rnd(15,28)+'px'
+        });
+      },i*90);
+    })(i);
+  }
+}
+function heartBurst(n,x,y){
+  for(var i=0;i<n;i++){
+    spawnFx('heart burst',pick(HEARTS),x,y,{
+      '--bx':rnd(-130,130)+'px','--by':rnd(-190,-50)+'px','--t':rnd(1,1.7)+'s','font-size':rnd(14,30)+'px'
+    });
+  }
+}
+function addMood(n){
+  mood=Math.min(100,mood+n);
+  renderMood();
+  if(mood>=100&&!maxed){maxed=true;celebrate();}
+}
+function renderMood(){
+  moodFill.style.width=mood+'%';
+  moodFill.classList.toggle('max',mood>=100);
+  if(mood<70)maxed=false;
+}
+function celebrate(){
+  var p=catAnchor();
+  bubble('🎉 亲密度 MAX！我最喜欢你啦！',2400);
+  heartBurst(22,p.x,p.y);
+  moveCls('bouncing',1700);
+  chirp();setTimeout(chirp,300);
+}
+function catCls(cls,dur){
+  cat.classList.add(cls);
+  setTimeout(function(){cat.classList.remove(cls);},dur);
+}
+function moveCls(cls,dur){
+  move.classList.add(cls);
+  setTimeout(function(){move.classList.remove(cls);},dur);
+}
+function setBusy(dur){busy=true;setTimeout(function(){busy=false;},dur);}
+function hideHint(){hint.classList.add('hide');}
+
+/* ---------- 互动动作 ---------- */
+function petAction(){
+  if(busy||sleeping)return;
+  setBusy(2100);hideHint();
+  var p=catAnchor();
+  var hand=spawnFx('hand','🤚',p.x+16,p.r.top+p.r.height*.28);
+  cat.classList.add('happy','petting');
+  moveCls('purring',1900);
+  setTimeout(function(){cat.classList.remove('happy','petting');},2000);
+  setTimeout(function(){spawnHearts(5,p.x,p.r.top+p.r.height*.3);},350);
+  setTimeout(function(){spawnHearts(4,p.x,p.r.top+p.r.height*.3);},1000);
+  bubble('呼噜呼噜～ 💕',1800);
+  purr();addMood(8);
+}
+function feedAction(){
+  if(busy||sleeping)return;
+  setBusy(3000);hideHint();
+  var p=catAnchor();
+  var fishX=p.x-p.r.width*.3, fishY=p.r.bottom-42;
+  var fish=spawnFx('fish','🐟',fishX,fishY,{'font-size':'32px'});
+  cat.classList.add('eating');
+  move.classList.add('eating');
+  setTimeout(nom,850);
+  setTimeout(nom,1300);
+  setTimeout(nom,1750);
+  setTimeout(function(){fish.classList.add('gone');},2100);
+  setTimeout(function(){
+    cat.classList.remove('eating');
+    move.classList.remove('eating');
+    bubble('嗝～ 太好吃啦！🐟',1800);
+    spawnHearts(3,p.x,p.r.top+p.r.height*.4);
+    addMood(10);
+  },2700);
+}
+function playAction(){
+  if(busy||sleeping)return;
+  setBusy(3400);hideHint();
+  var yarn=document.createElement('div');
+  yarn.className='yarn';yarn.textContent='🧶';
+  wrap.appendChild(yarn);
+  setTimeout(function(){yarn.remove();},3200);
+  setTimeout(function(){moveCls('bouncing',1700);},400);
+  meow();
+  var p=catAnchor();
+  setTimeout(function(){bubble('喵呜！再来再来！🧶',1800);spawnHearts(3,p.x,p.r.top+p.r.height*.35);addMood(6);},2400);
+}
+function rollAction(){
+  if(busy||sleeping)return;
+  setBusy(1600);hideHint();
+  catCls('rolling',1450);
+  catCls('happy',1500);
+  var p=catAnchor();
+  spawnHearts(3,p.x,p.r.top+p.r.height*.35);
+  bubble('喵哈哈～ 🌀',1500);
+  meow();addMood(4);
+}
+function tickleAction(){
+  if(busy||sleeping)return;
+  setBusy(1700);hideHint();
+  moveCls('tickle',1650);
+  catCls('happy',1650);
+  var p=catAnchor();
+  setTimeout(function(){spawnHearts(4,p.x,p.r.top+p.r.height*.35);},300);
+  bubble('嘻嘻～ 别挠痒痒！',1600);
+  chirp();addMood(4);
+}
+function wiggleAction(){
+  if(busy||sleeping)return;
+  setBusy(1300);hideHint();
+  moveCls('bouncing',1700);
+  catCls('happy',1300);
+  var p=catAnchor();
+  spawnHearts(2,p.x,p.r.top+p.r.height*.35);
+  bubble('喵～♪',1400);
+  meow();addMood(3);
+}
+function tailPoke(){
+  if(busy||sleeping)return;
+  setBusy(950);hideHint();
+  moveCls('startled',850);
+  catCls('startled',850);
+  var p=catAnchor();
+  spawnFx('heart','💢',p.x+p.r.width*.34,p.r.top+p.r.height*.22,{'--t':'.9s','font-size':'26px'});
+  bubble('喵！！！💢',1100);
+  meow();addMood(2);
+}
+function bodyTap(){
+  var r=Math.random();
+  if(r<.4)rollAction();
+  else if(r<.75)tickleAction();
+  else wiggleAction();
+}
+function pokeFeedback(){
+  moveCls('poke',190);
+}
+
+/* ---------- 睡觉 / 醒来 ---------- */
+function goSleep(){
+  if(sleeping||busy)return;
+  sleeping=true;
+  cat.classList.add('sleeping');
+  scene.classList.add('night');
+  btnSleep.classList.add('on');
+  bubble('晚安喵… 🌙',2200);
+  zzzTimer=setInterval(function(){
+    var p=catAnchor();
+    spawnFx('zzz','💤',p.x+p.r.width*.26+rnd(0,18),p.r.top+p.r.height*.14,{
+      '--t':'2.6s','font-size':rnd(14,24)+'px'
+    });
+  },1000);
+}
+function wakeUp(){
+  if(!sleeping)return;
+  sleeping=false;
+  clearInterval(zzzTimer);
+  cat.classList.remove('sleeping');
+  scene.classList.remove('night');
+  btnSleep.classList.remove('on');
+  moveCls('startled',850);
+  var p=catAnchor();
+  bubble('喵？！我睡醒啦！',1700);
+  spawnHearts(2,p.x,p.r.top+p.r.height*.3);
+  meow();addMood(3);
+}
+
+/* ---------- 换装 / 声音 ---------- */
+var THEMES=[
+  {fur:'#ffb056',dark:'#ef8b2f',name:'小橘猫'},
+  {fur:'#fff3e4',dark:'#ecd9c3',name:'奶白猫'},
+  {fur:'#c9d4ea',dark:'#a8b8d8',name:'蓝灰猫'},
+  {fur:'#6b6b80',dark:'#4c4c60',name:'小黑猫'},
+  {fur:'#e6b98c',dark:'#cf9a63',name:'奶茶猫'}
+];
+function cycleColor(){
+  colorIdx=(colorIdx+1)%THEMES.length;
+  var th=THEMES[colorIdx];
+  scene.style.setProperty('--fur',th.fur);
+  scene.style.setProperty('--fur-dark',th.dark);
+  if(sleeping){bubble('变身 '+th.name+'！✨',1800);return;}
+  var p=catAnchor();
+  spawnFx('heart','✨',p.x,p.r.top+p.r.height*.3,{'--t':'1s','font-size':'24px'});
+  moveCls('bouncing',1700);
+  bubble('变身 '+th.name+'！✨',1800);
+  chirp();
+}
+function toggleSound(){
+  soundOn=!soundOn;
+  btnSound.classList.toggle('on',soundOn);
+  btnSound.querySelector('.ic').textContent=soundOn?'🔊':'🔇';
+  if(soundOn){ensureCtx();meow();bubble('喵～ 🔊',1200);}
+  else bubble('已静音 🔇',1200);
+}
+
+/* ---------- 事件绑定 ---------- */
+document.querySelectorAll('.zone').forEach(function(z){
+  z.addEventListener('pointerdown',function(e){
+    e.stopPropagation();
+    if(sleeping){wakeUp();return;}
+    if(busy){pokeFeedback();return;}
+    var zone=z.getAttribute('data-zone');
+    if(zone==='head')petAction();
+    else if(zone==='body')bodyTap();
+    else tailPoke();
+  });
+});
+document.querySelectorAll('#dock button').forEach(function(b){
+  b.addEventListener('pointerdown',function(e){
+    e.stopPropagation();
+    var act=b.getAttribute('data-act');
+    if(act==='color'){cycleColor();return;}
+    if(act==='sound'){toggleSound();return;}
+    if(act==='sleep'){
+      if(sleeping)wakeUp();else if(busy)bubble('等我一秒喵…',900);else goSleep();
+      return;
+    }
+    if(sleeping){bubble('（呼噜呼噜…睡着了）',1500);return;}
+    if(busy){pokeFeedback();return;}
+    if(act==='pet')petAction();
+    else if(act==='feed')feedAction();
+    else if(act==='play')playAction();
+  });
+});
+scene.addEventListener('contextmenu',function(e){e.preventDefault();});
+
+/* ---------- 待机行为 ---------- */
+function scheduleBlink(){
+  setTimeout(function(){
+    if(!cat.classList.contains('sleeping')){
+      catCls('blink',150);
+    }
+    scheduleBlink();
+  },rnd(2200,5800));
+}
+function scheduleTwitch(){
+  setTimeout(function(){
+    if(!busy&&!sleeping)catCls('twitch',480);
+    scheduleTwitch();
+  },rnd(4000,9000));
+}
+function scheduleWalk(){
+  setTimeout(function(){
+    if(!busy&&!sleeping){
+      busy=true;
+      var target=rnd(20,78);
+      var dur=1.4+Math.abs(target-posX)/9;
+      wrap.style.transition='left '+dur+'s ease-in-out';
+      wrap.style.left=target+'%';
+      posX=target;
+      move.classList.add('walking');
+      setTimeout(function(){
+        move.classList.remove('walking');
+        busy=false;
+        if(Math.random()<.4)bubble(pick(['换个地方晒太阳 ☀️','巡逻完毕！','这里风景不错喵～']),1500);
+      },dur*1000+120);
+    }
+    scheduleWalk();
+  },rnd(13000,24000));
+}
+var IDLE_TALK=['喵～','在看什么呀？','陪我玩嘛 🥺','今天天气真好喵~','发呆中…','肚子有点饿了…'];
+function scheduleChatter(){
+  setTimeout(function(){
+    if(!busy&&!sleeping)bubble(pick(IDLE_TALK),1600);
+    scheduleChatter();
+  },rnd(18000,34000));
+}
+
+/* ---------- 环境粒子（花瓣 / 萤火虫） ---------- */
+setInterval(function(){
+  var alive=document.querySelectorAll('.petal').length;
+  if(alive>6)return;
+  var s=document.createElement('span');
+  var night=sleeping;
+  s.className='fx petal '+(night?'p-fly':'p-fall');
+  s.textContent=night?'✨':(Math.random()<.72?pick(['🌸','🌸','🍃']):'🦋');
+  s.style.left=rnd(3,94)+'vw';
+  s.style.fontSize=rnd(13,26)+'px';
+  s.style.setProperty('--t',rnd(5.5,9)+'s');
+  document.body.appendChild(s);
+  setTimeout(function(){s.remove();},9600);
+},2700);
+
+/* ---------- 星星 ---------- */
+(function(){
+  var box=document.getElementById('stars');
+  for(var i=0;i<36;i++){
+    var st=document.createElement('i');
+    st.className='star';
+    var sz=rnd(1.6,3.4);
+    st.style.width=sz+'px';st.style.height=sz+'px';
+    st.style.left=rnd(1,98)+'%';
+    st.style.top=rnd(2,92)+'%';
+    st.style.animationDuration=rnd(1.4,3.2)+'s';
+    st.style.animationDelay=rnd(0,2)+'s';
+    box.appendChild(st);
+  }
+})();
+
+/* ---------- 亲密度衰减 & 初始化 ---------- */
+setInterval(function(){if(!sleeping){mood=Math.max(0,mood-1);renderMood();}},6000);
+renderMood();
+wrap.style.left='50%';
+setTimeout(hideHint,9000);
+scheduleBlink();
+scheduleTwitch();
+setTimeout(scheduleWalk,12000);
+scheduleChatter();
+})();
+</script>
+<script>document.addEventListener('contextmenu', function(e){e.preventDefault();});</script>
+</body>
+</html>
