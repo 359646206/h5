@@ -3,7 +3,7 @@
 | 壁纸 | 页面 URL (`web_page_url`) | ZIP URL (`web_url`) |
 | --- | --- | --- |
 | 萌宠小猫 | https://359646206.github.io/h5/cat/ | https://359646206.github.io/h5/downloads/cat.zip |
-| 时光壁纸 | https://359646206.github.io/h5/time/ | https://359646206.github.io/h5/downloads/time.zip |
+| 时光壁纸 I | https://359646206.github.io/h5/time01/ | https://359646206.github.io/h5/downloads/time01.zip |
 | 雪山湖泊 · 时光壁纸 | https://359646206.github.io/h5/time-harmony/ | https://359646206.github.io/h5/downloads/time-harmony.zip |
 
 每个 ZIP 的根目录都是 `index.html`，可下载、解压后离线加载。两份页面保留原有动画和互动，移除了 WorkBuddy 专用的注入脚本，并在页面内禁用长按菜单。
