@@ -31,7 +31,28 @@
     pointer-events: auto;
     animation: fadeUp 1.6s 0.3s ease both;
     box-shadow: 0 8px 40px rgba(0, 0, 20, 0.35);
+    transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  #panel.hidden {
+    opacity: 0;
+    transform: translate(-50%, 130%);
+    pointer-events: none;
+  }
+  #panelToggle {
+    position: absolute; right: 14px;
+    bottom: max(calc(4vh + 42px), calc(env(safe-area-inset-bottom) + 62px));
+    width: 38px; height: 38px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    pointer-events: auto;
+    animation: fadeToggle 1.6s 0.5s ease both;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s;
+  }
+  #panelToggle svg { display: block; }
+  #panelToggle.up { transform: rotate(180deg); }
+  #panelToggle.active { background: rgba(255, 255, 255, 0.9); }
+  #panelToggle.active svg path { stroke: #1c2547; }
+  @keyframes fadeToggle { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeUp { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
   .row { display: flex; align-items: center; gap: 12px; }
   #scrubLabel {
@@ -89,6 +110,11 @@
     </div>
     <div data-page-node-id="z2DaT1C19YWCJQyupzRKDB" id="hint"><!--pnid:zvpbZnRoMn4drK4FHGbrw1-->拖动时间轴，体验一天的光影流转 · 演示模式加速播放</div>
   </div>
+  <button data-page-node-id="7BSwuKHpeeSqLCITJfsDE7" id="panelToggle" title="显示/隐藏控制面板">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M3 6 L8 11 L13 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 </div>
 
 <script data-page-node-id="bLILp3IPA8Gip3AskgKwDu" data-pnid-children="LT5VH9B7xx0XbYZaeQgJkj">
@@ -567,7 +593,18 @@ const elLabel = document.getElementById('scrubLabel');
 const slider = document.getElementById('scrub');
 const btnNow = document.getElementById('btnNow');
 const btnDemo = document.getElementById('btnDemo');
+const panel = document.getElementById('panel');
+const panelToggle = document.getElementById('panelToggle');
 let lastTimeStr = '';
+
+/* 面板开关：入场动画结束后清除 fill-mode 占位，保证显隐过渡生效 */
+panel.addEventListener('animationend', function () { panel.style.animation = 'none'; });
+panelToggle.addEventListener('click', function () {
+  const hidden = panel.classList.toggle('hidden');
+  panelToggle.classList.toggle('up', hidden);
+  panelToggle.classList.toggle('active', hidden);
+  panelToggle.title = hidden ? '显示控制面板' : '隐藏控制面板';
+});
 
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
