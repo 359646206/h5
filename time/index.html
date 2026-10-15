@@ -128,15 +128,7 @@ function mix(a, b, t) {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 function css(c) { return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; }
-function cssA(c, a) { return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')'; }
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-function rand(seed) {
-  let s = seed >>> 0;
-  return function () {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
 
 /* ---------------- 一天 24 小时的色彩关键帧 ---------------- */
 const KF_RAW = [
@@ -183,78 +175,30 @@ function getPal(hour) {
 /* ---------------- 画布与场景元素 ---------------- */
 const canvas = document.getElementById('sky');
 const ctx = canvas.getContext('2d');
-let W = 0, H = 0, HORIZON = 0;
+let W = 0, H = 0;
 
-function makeRidge(seed, baseFrac, ampFrac) {
-  const r = rand(seed);
-  const c1 = 2 + r() * 3.5, c2 = 6 + r() * 5, c3 = 14 + r() * 10;
-  const p1 = r() * 10, p2 = r() * 10, p3 = r() * 10;
-  const pts = [], n = 90;
-  for (let i = 0; i <= n; i++) {
-    const x = i / n;
-    const y = baseFrac
-      - ampFrac * (0.5 + 0.5 * Math.sin(x * Math.PI * 2 * c1 + p1)) * (0.62 + 0.38 * Math.sin(x * Math.PI * 2 * c2 + p2))
-      - ampFrac * 0.28 * Math.sin(x * Math.PI * 2 * c3 + p3);
-    pts.push({ x: x, y: y });
-  }
-  return pts;
+/* ---------------- 素材图片（白天模式，叠加构成基础构图） ---------------- */
+const bgImg = new Image();
+const fgImg = new Image();
+let bgReady = false, fgReady = false;
+bgImg.onload = function () { bgReady = true; };
+fgImg.onload = function () { fgReady = true; };
+bgImg.src = 'bg.png';
+fgImg.src = 'fg.png';
+
+/* 等比铺满屏幕（cover），两张图同尺寸同构图，自然对齐 */
+function drawCover(g, img, dw0, dh0) {
+  const cw = dw0 || W, ch = dh0 || H;
+  const s = Math.max(cw / img.width, ch / img.height);
+  const dw = img.width * s, dh = img.height * s;
+  g.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
 }
-const ridgeFar = makeRidge(11, 0.66, 0.17);
-const ridgeMid = makeRidge(77, 0.675, 0.105);
-const ridgeNear = makeRidge(233, 0.955, 0.045);
-
-const rStars = rand(5);
-const stars = [];
-for (let i = 0; i < 150; i++) {
-  stars.push({
-    x: rStars(), y: rStars() * 0.6,
-    r: 0.4 + rStars() * 1.3,
-    sp: 0.5 + rStars() * 2.2, ph: rStars() * 10,
-    big: rStars() < 0.06
-  });
-}
-
-const rCloud = rand(99);
-const clouds = [];
-for (let i = 0; i < 7; i++) {
-  const blobs = [];
-  const nb = 5 + Math.floor(rCloud() * 3);
-  for (let j = 0; j < nb; j++) {
-    blobs.push({
-      dx: (j / (nb - 1) - 0.5) * 2.4 + (rCloud() - 0.5) * 0.5,
-      dy: (rCloud() - 0.5) * 0.55,
-      rx: 0.55 + rCloud() * 0.65,
-      ry: 0.38 + rCloud() * 0.3
-    });
-  }
-  clouds.push({
-    y: 0.07 + rCloud() * 0.34,
-    scale: 0.55 + rCloud() * 0.85,
-    speed: 0.006 + rCloud() * 0.011,
-    x0: rCloud(),
-    blobs: blobs
-  });
-}
-
-const rFly = rand(7);
-const fireflies = [];
-for (let i = 0; i < 22; i++) {
-  fireflies.push({
-    bx: 0.05 + rFly() * 0.9, by: 0.74 + rFly() * 0.2,
-    sp1: 0.15 + rFly() * 0.3, sp2: 0.1 + rFly() * 0.3,
-    ph: rFly() * 10, gp: rFly() * 10
-  });
-}
-
-let flocks = [];
-let flockTimer = 3;
-let meteors = [];
 
 /* ---------------- 状态 ---------------- */
 let offsetMs = 0;
 let demo = false;
 let dragging = false;
-let lastTs = 0, tAnim = 0;
+let lastTs = 0;
 const DEMO_SPEED = 359; // 1 秒 ≈ 6 分钟
 
 /* ---------------- 绘制 ---------------- */
@@ -266,326 +210,59 @@ function resize() {
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  HORIZON = H * 0.68;
 }
 window.addEventListener('resize', resize);
 resize();
 
-function drawRidge(pts, color) {
-  ctx.beginPath();
-  ctx.moveTo(-2, H + 2);
-  for (let i = 0; i < pts.length; i++) ctx.lineTo(pts[i].x * W, pts[i].y * H);
-  ctx.lineTo(W + 2, H + 2);
-  ctx.closePath();
-  ctx.fillStyle = css(color);
-  ctx.fill();
-}
-
-function pine(x, baseY, ht, wd, color) {
-  ctx.fillStyle = css(color);
-  ctx.fillRect(x - wd * 0.05, baseY - ht * 0.22, wd * 0.1, ht * 0.24);
-  for (let i = 0; i < 3; i++) {
-    const apexY = baseY - ht + i * ht * 0.26;
-    const baseW = wd * (0.45 + i * 0.32);
-    ctx.beginPath();
-    ctx.moveTo(x, apexY);
-    ctx.lineTo(x - baseW / 2, apexY + ht * 0.48);
-    ctx.lineTo(x + baseW / 2, apexY + ht * 0.48);
-    ctx.closePath();
-    ctx.fill();
+/* 前景山体离屏画布：绘制后叠加与背景一致的光影色调，并按山体透明度裁回 */
+const fgCv = document.createElement('canvas');
+const fctx = fgCv.getContext('2d');
+function drawFgTinted(tint) {
+  if (!fgReady) return;
+  if (fgCv.width !== canvas.width || fgCv.height !== canvas.height) {
+    fgCv.width = canvas.width;
+    fgCv.height = canvas.height;
   }
+  fctx.setTransform(1, 0, 0, 1, 0, 0);
+  fctx.globalCompositeOperation = 'source-over';
+  fctx.clearRect(0, 0, fgCv.width, fgCv.height);
+  const s = Math.max(fgCv.width / fgImg.width, fgCv.height / fgImg.height);
+  const dw = fgImg.width * s, dh = fgImg.height * s;
+  const dx = (fgCv.width - dw) / 2, dy = (fgCv.height - dh) / 2;
+  fctx.drawImage(fgImg, dx, dy, dw, dh);
+  fctx.globalCompositeOperation = 'multiply';
+  fctx.fillStyle = css(tint);
+  fctx.fillRect(0, 0, fgCv.width, fgCv.height);
+  fctx.globalCompositeOperation = 'destination-in';
+  fctx.drawImage(fgImg, dx, dy, dw, dh);
+  fctx.globalCompositeOperation = 'source-over';
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(fgCv, 0, 0);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function drawScene(hour, pal) {
-  const t = tAnim;
   ctx.clearRect(0, 0, W, H);
 
-  /* 天空 */
-  const skyG = ctx.createLinearGradient(0, 0, 0, HORIZON + H * 0.1);
-  skyG.addColorStop(0, css(pal.sky[0]));
-  skyG.addColorStop(0.55, css(pal.sky[1]));
-  skyG.addColorStop(1, css(pal.sky[2]));
-  ctx.fillStyle = skyG;
+  /* 底色（素材加载前的兜底） */
+  ctx.fillStyle = css(pal.sky[0]);
   ctx.fillRect(0, 0, W, H);
 
-  /* 星星 */
-  if (pal.star > 0.02) {
-    for (let i = 0; i < stars.length; i++) {
-      const s = stars[i];
-      const a = pal.star * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
-      if (a < 0.04) continue;
-      const x = s.x * W, y = s.y * H;
-      ctx.fillStyle = cssA([235, 240, 255], a * 0.95);
-      ctx.beginPath();
-      ctx.arc(x, y, s.r, 0, Math.PI * 2);
-      ctx.fill();
-      if (s.big && a > 0.35) {
-        ctx.strokeStyle = cssA([235, 240, 255], a * 0.45);
-        ctx.lineWidth = 1;
-        const L = s.r * 5;
-        ctx.beginPath();
-        ctx.moveTo(x - L, y); ctx.lineTo(x + L, y);
-        ctx.moveTo(x, y - L); ctx.lineTo(x, y + L);
-        ctx.stroke();
-      }
-    }
-  }
+  /* 光影随时间变化：白天原色 → 晨昏暖调 → 夜晚深蓝 */
+  const duskW = Math.min(1,
+    Math.exp(-Math.pow(hour - 6.1, 2) / 0.9) + Math.exp(-Math.pow(hour - 18.3, 2) / 0.9));
+  const tint = mix(mix([255, 250, 244], [255, 176, 120], duskW * 0.8), pal.sky[0], pal.star * 0.94);
 
-  /* 流星 */
-  for (let i = meteors.length - 1; i >= 0; i--) {
-    const m = meteors[i];
-    if (m.life <= 0) { meteors.splice(i, 1); continue; }
-    const x2 = m.x - m.vx * 0.14, y2 = m.y - m.vy * 0.14;
-    const g = ctx.createLinearGradient(m.x, m.y, x2, y2);
-    g.addColorStop(0, cssA([255, 255, 255], m.life * pal.star));
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(m.x, m.y); ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-
-  /* 太阳与月亮 */
-  const sunT = (hour - 6) / 12;
-  const moonT = ((hour - 18 + 24) % 24) / 12;
-  const sunAlt = (sunT > -0.03 && sunT < 1.03) ? clamp(Math.sin(Math.PI * sunT), 0, 1) : -1;
-  const moonAlt = (moonT > -0.03 && moonT < 1.03) ? clamp(Math.sin(Math.PI * moonT), 0, 1) : -1;
-  let cel = null; // 当前用于倒影的天体
-
-  if (sunAlt >= 0) {
-    const x = W * (0.12 + 0.76 * sunT);
-    const y = HORIZON - sunAlt * HORIZON * 0.85;
-    const R = Math.min(W, H) * 0.055;
-    const col = mix([255, 150, 70], [255, 247, 225], sunAlt);
-    const halo = ctx.createRadialGradient(x, y, 0, x, y, R * 7);
-    halo.addColorStop(0, cssA(col, 0.32));
-    halo.addColorStop(1, cssA(col, 0));
-    ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.arc(x, y, R * 7, 0, Math.PI * 2); ctx.fill();
-    const body = ctx.createRadialGradient(x - R * 0.25, y - R * 0.25, R * 0.1, x, y, R);
-    body.addColorStop(0, '#fffdf4');
-    body.addColorStop(1, css(col));
-    ctx.fillStyle = body;
-    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
-    cel = { x: x, up: sunAlt, col: col };
-  }
-  if (moonAlt >= 0) {
-    const x = W * (0.12 + 0.76 * moonT);
-    const y = HORIZON - moonAlt * HORIZON * 0.85;
-    const R = Math.min(W, H) * 0.042;
-    const halo = ctx.createRadialGradient(x, y, 0, x, y, R * 5.5);
-    halo.addColorStop(0, cssA([205, 218, 255], 0.28));
-    halo.addColorStop(1, 'rgba(205,218,255,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.arc(x, y, R * 5.5, 0, Math.PI * 2); ctx.fill();
-    const body = ctx.createRadialGradient(x - R * 0.3, y - R * 0.3, R * 0.15, x, y, R);
-    body.addColorStop(0, '#fdfcf2');
-    body.addColorStop(1, '#ded9c2');
-    ctx.fillStyle = body;
-    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(120, 118, 100, 0.14)';
-    ctx.beginPath(); ctx.arc(x - R * 0.3, y - R * 0.15, R * 0.22, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + R * 0.25, y + R * 0.3, R * 0.16, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + R * 0.1, y - R * 0.42, R * 0.11, 0, Math.PI * 2); ctx.fill();
-    if (!cel || moonAlt > sunAlt) cel = { x: x, up: moonAlt, col: [205, 218, 255] };
-  }
-
-  /* 地平线光晕 */
-  if (cel && cel.up > 0) {
-    ctx.save();
-    ctx.translate(cel.x, HORIZON);
-    ctx.scale(1, 0.13);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, W * 0.32);
-    g.addColorStop(0, cssA(cel.col, 0.38 * cel.up));
-    g.addColorStop(1, cssA(cel.col, 0));
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(0, 0, W * 0.32, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-  }
-
-  /* 云 */
-  const cloudBase = Math.min(W, 900) * 0.045;
-  for (let i = 0; i < clouds.length; i++) {
-    const c = clouds[i];
-    const cx = ((c.x0 + t * c.speed) % 1.3) * (W * 1.3) - W * 0.15;
-    const cy = c.y * H;
-    const s = cloudBase * c.scale;
-    ctx.fillStyle = cssA(mix(pal.cloud, [0, 0, 0], 0.22), 0.55);
-    for (let j = 0; j < c.blobs.length; j++) {
-      const b = c.blobs[j];
-      ctx.beginPath();
-      ctx.ellipse(cx + b.dx * s, cy + b.dy * s * 0.7 + s * 0.1, b.rx * s, b.ry * s * 0.65, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.fillStyle = cssA(pal.cloud, 0.75);
-    for (let j = 0; j < c.blobs.length; j++) {
-      const b = c.blobs[j];
-      ctx.beginPath();
-      ctx.ellipse(cx + b.dx * s, cy + b.dy * s * 0.7 - s * 0.12, b.rx * s * 0.85, b.ry * s * 0.55, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  /* 远山 + 大气雾 */
-  drawRidge(ridgeFar, pal.mtn[0]);
-  const haze = ctx.createLinearGradient(0, H * 0.5, 0, HORIZON);
-  haze.addColorStop(0, cssA(pal.sky[2], 0));
-  haze.addColorStop(1, cssA(pal.sky[2], 0.5));
-  ctx.fillStyle = haze;
-  ctx.fillRect(0, H * 0.5, W, HORIZON - H * 0.5);
-
-  /* 中山 */
-  drawRidge(ridgeMid, pal.mtn[1]);
-
-  /* 水面 */
-  const wTop = mix(pal.sky[2], [0, 0, 0], 0.22);
-  const wBot = mix(pal.sky[1], [0, 0, 0], 0.58);
-  const waterG = ctx.createLinearGradient(0, HORIZON, 0, H);
-  waterG.addColorStop(0, css(wTop));
-  waterG.addColorStop(1, css(wBot));
-  ctx.fillStyle = waterG;
-  ctx.fillRect(0, HORIZON, W, H - HORIZON);
-
-  /* 天体倒影 */
-  if (cel && cel.up > 0) {
-    const streak = ctx.createLinearGradient(0, HORIZON, 0, H);
-    streak.addColorStop(0, cssA(cel.col, 0.42 * cel.up));
-    streak.addColorStop(1, cssA(cel.col, 0));
-    ctx.fillStyle = streak;
-    const w0 = W * 0.022, w1 = W * 0.095;
-    ctx.beginPath();
-    ctx.moveTo(cel.x - w0, HORIZON);
-    ctx.lineTo(cel.x + w0, HORIZON);
-    ctx.lineTo(cel.x + w1, H);
-    ctx.lineTo(cel.x - w1, H);
-    ctx.closePath();
-    ctx.fill();
-    const rows = 12, rowH = (H - HORIZON) / rows;
-    for (let i = 0; i < rows; i++) {
-      const y = HORIZON + (i + 0.5) * rowH;
-      const d = i / (rows - 1);
-      const width = (w0 + (w1 - w0) * d) * (0.55 + 0.45 * Math.sin(t * 0.7 + i * 1.35));
-      const x = cel.x + Math.sin(t * 0.45 + i * 0.9) * 9 * d;
-      ctx.fillStyle = cssA(cel.col, 0.22 * (1 - d) * cel.up);
-      ctx.fillRect(x - width / 2, y, width, 1.8);
-    }
-  }
-
-  /* 水面零星波光 */
-  const rW = rand(31);
-  for (let i = 0; i < 9; i++) {
-    const y = HORIZON + (0.08 + rW() * 0.8) * (H - HORIZON);
-    const x = ((rW() + t * 0.004 * (1 + rW())) % 1) * W;
-    ctx.fillStyle = cssA(mix(pal.sky[2], [255, 255, 255], 0.35), 0.08 + 0.05 * Math.sin(t + i));
-    ctx.fillRect(x, y, W * (0.02 + rW() * 0.05), 1.2);
-  }
-
-  /* 水平线 */
-  ctx.fillStyle = cssA(mix(pal.sky[2], [255, 255, 255], 0.3), 0.3);
-  ctx.fillRect(0, HORIZON - 0.5, W, 1);
-
-  /* 近岸与树影 */
-  const nearCol = mix(pal.mtn[2], [0, 0, 0], 0.35);
-  drawRidge(ridgeNear, nearCol);
-  const treeCol = mix(nearCol, [0, 0, 0], 0.3);
-  pine(W * 0.06, H * 0.985, H * 0.13, W * 0.05, treeCol);
-  pine(W * 0.105, H * 0.99, H * 0.18, W * 0.07, treeCol);
-  pine(W * 0.155, H * 0.985, H * 0.1, W * 0.04, treeCol);
-  pine(W * 0.9, H * 0.99, H * 0.15, W * 0.06, treeCol);
-  pine(W * 0.95, H * 0.985, H * 0.11, W * 0.045, treeCol);
-
-  /* 飞鸟（白天） */
-  const dayA = clamp(1 - pal.star * 1.8, 0, 1);
-  if (dayA > 0.05) {
-    const birdCol = cssA(mix(pal.sky[1], [8, 10, 20], 0.72), 0.85 * dayA);
-    ctx.strokeStyle = birdCol;
-    ctx.lineWidth = 1.6;
-    ctx.lineCap = 'round';
-    for (let f = 0; f < flocks.length; f++) {
-      const fl = flocks[f];
-      for (let b = 0; b < fl.n; b++) {
-        const side = b % 2 === 0 ? 1 : -1;
-        const k = Math.ceil(b / 2);
-        const bx = fl.x * W + side * k * fl.s * 18 - fl.s * 4;
-        const by = fl.y * H + k * fl.s * 9 + Math.sin(t * 1.3 + b) * 2;
-        const s = fl.s * 5.5;
-        const flap = Math.sin(t * 9 + b * 0.7 + fl.ph) * 0.5 + 0.5;
-        ctx.beginPath();
-        ctx.moveTo(bx - s, by);
-        ctx.quadraticCurveTo(bx - s * 0.45, by - s * (0.55 + flap * 0.55), bx, by);
-        ctx.quadraticCurveTo(bx + s * 0.45, by - s * (0.55 + flap * 0.55), bx + s, by);
-        ctx.stroke();
-      }
-    }
-  }
-
-  /* 萤火虫（夜晚） */
-  if (pal.star > 0.15) {
-    const nf = clamp((pal.star - 0.15) / 0.5, 0, 1);
-    for (let i = 0; i < fireflies.length; i++) {
-      const f = fireflies[i];
-      const x = f.bx * W + Math.sin(t * f.sp1 + f.ph) * W * 0.028;
-      const y = f.by * H + Math.sin(t * f.sp2 + f.ph * 2) * H * 0.02;
-      const pulse = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 2.2 + f.gp));
-      const a = nf * pulse * 0.9;
-      if (a < 0.03) continue;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 7);
-      g.addColorStop(0, cssA([234, 255, 176], a));
-      g.addColorStop(1, 'rgba(234,255,176,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = cssA([250, 255, 220], Math.min(1, a * 1.4));
-      ctx.beginPath(); ctx.arc(x, y, 1.3, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-
-  /* 暗角 */
-  const vg = ctx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.4, W / 2, H * 0.5, Math.max(W, H) * 0.75);
-  vg.addColorStop(0, 'rgba(5,8,20,0)');
-  vg.addColorStop(1, 'rgba(5,8,20,0.3)');
-  ctx.fillStyle = vg;
+  /* 背景天空（素材）+ 整体光影色调 */
+  if (bgReady) drawCover(ctx, bgImg);
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = css(tint);
   ctx.fillRect(0, 0, W, H);
-}
+  ctx.globalCompositeOperation = 'source-over';
 
-/* ---------------- 更新逻辑 ---------------- */
-function updateWorld(hour, pal, dt) {
-  /* 流星生成 */
-  if (pal.star > 0.55 && Math.random() < 0.005) {
-    const dir = Math.random() < 0.5 ? 1 : -1;
-    meteors.push({
-      x: W * (0.15 + Math.random() * 0.7),
-      y: H * (0.05 + Math.random() * 0.22),
-      vx: (260 + Math.random() * 240) * dir,
-      vy: 110 + Math.random() * 90,
-      life: 1
-    });
-  }
-  for (let i = 0; i < meteors.length; i++) {
-    const m = meteors[i];
-    m.x += m.vx * dt; m.y += m.vy * dt; m.life -= dt * 1.15;
-  }
-
-  /* 鸟群生成（白天） */
-  const dayA = clamp(1 - pal.star * 1.8, 0, 1);
-  flockTimer -= dt;
-  if (flockTimer <= 0) {
-    flockTimer = 6 + Math.random() * 9;
-    if (dayA > 0.4 && hour > 6.3 && hour < 18.2) {
-      flocks.push({
-        x: -0.18, y: 0.14 + Math.random() * 0.3,
-        v: 0.035 + Math.random() * 0.03,
-        n: 3 + Math.floor(Math.random() * 6),
-        s: 0.75 + Math.random() * 0.55,
-        ph: Math.random() * 10
-      });
-    }
-  }
-  for (let i = flocks.length - 1; i >= 0; i--) {
-    flocks[i].x += flocks[i].v * dt;
-    if (flocks[i].x > 1.25) flocks.splice(i, 1);
-  }
+  /* 前景山体（素材，带同步光影） */
+  drawFgTinted(tint);
 }
 
 /* ---------------- DOM ---------------- */
@@ -628,14 +305,12 @@ function frame(ts) {
   if (!lastTs) lastTs = ts;
   const dt = Math.min(0.06, (ts - lastTs) / 1000);
   lastTs = ts;
-  tAnim += dt;
   if (demo) offsetMs += dt * 1000 * DEMO_SPEED;
 
   const now = new Date(Date.now() + offsetMs);
   const hour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   const pal = getPal(hour);
 
-  updateWorld(hour, pal, dt);
   drawScene(hour, pal);
 
   const hh = pad(now.getHours()), mm = pad(now.getMinutes());
