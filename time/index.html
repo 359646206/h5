@@ -130,6 +130,13 @@ function mix(a, b, t) {
 function css(c) { return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; }
 function cssA(c, a) { return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')'; }
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+function rand(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
 
 /* ---------------- 一天 24 小时的色彩关键帧 ---------------- */
 const KF_RAW = [
@@ -195,11 +202,25 @@ function drawCover(g, img, dw0, dh0) {
   g.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
 }
 
+/* ---------------- 星空与流星 ---------------- */
+const rStars = rand(5);
+const stars = [];
+for (let i = 0; i < 150; i++) {
+  stars.push({
+    x: rStars(), y: rStars() * 0.6,
+    r: 0.4 + rStars() * 1.3,
+    sp: 0.5 + rStars() * 2.2, ph: rStars() * 10,
+    big: rStars() < 0.06
+  });
+}
+
+let meteors = [];
+
 /* ---------------- 状态 ---------------- */
 let offsetMs = 0;
 let demo = false;
 let dragging = false;
-let lastTs = 0;
+let lastTs = 0, tAnim = 0;
 const DEMO_SPEED = 359; // 1 秒 ≈ 6 分钟
 
 /* ---------------- 绘制 ---------------- */
@@ -218,7 +239,7 @@ resize();
 /* 前景山体离屏画布：绘制后叠加与背景一致的光影色调，并按山体透明度裁回 */
 const fgCv = document.createElement('canvas');
 const fctx = fgCv.getContext('2d');
-function drawFgTinted(topTint, botTint, desat) {
+function drawFgTinted(tint) {
   if (!fgReady) return;
   if (fgCv.width !== canvas.width || fgCv.height !== canvas.height) {
     fgCv.width = canvas.width;
@@ -231,18 +252,9 @@ function drawFgTinted(topTint, botTint, desat) {
   const dw = fgImg.width * s, dh = fgImg.height * s;
   const dx = (fgCv.width - dw) / 2, dy = (fgCv.height - dh) / 2;
   fctx.drawImage(fgImg, dx, dy, dw, dh);
-  const fg = fctx.createLinearGradient(0, 0, 0, fgCv.height);
-  fg.addColorStop(0, css(topTint));
-  fg.addColorStop(1, css(botTint));
   fctx.globalCompositeOperation = 'multiply';
-  fctx.fillStyle = fg;
+  fctx.fillStyle = css(tint);
   fctx.fillRect(0, 0, fgCv.width, fgCv.height);
-  /* 夜间降低山体饱和度，中和素材里自带的夕照橙色 */
-  if (desat > 0.01) {
-    fctx.globalCompositeOperation = 'saturation';
-    fctx.fillStyle = 'rgba(128,128,128,' + desat + ')';
-    fctx.fillRect(0, 0, fgCv.width, fgCv.height);
-  }
   fctx.globalCompositeOperation = 'destination-in';
   fctx.drawImage(fgImg, dx, dy, dw, dh);
   fctx.globalCompositeOperation = 'source-over';
@@ -253,45 +265,87 @@ function drawFgTinted(topTint, botTint, desat) {
 }
 
 function drawScene(hour, pal) {
+  const t = tAnim;
   ctx.clearRect(0, 0, W, H);
 
   /* 底色（素材加载前的兜底） */
   ctx.fillStyle = css(pal.sky[0]);
   ctx.fillRect(0, 0, W, H);
 
-  /* 光影随时间变化（参考时光壁纸：黎明曙光 → 白天原色 → 黄昏暖调 → 蓝调星夜）
-     n: 0 白天 → 1 深夜；天空与山地分开调色，保留画面层次 */
-  const n = pal.star;
+  /* 光影随时间变化：白天原色 → 晨昏暖调 → 夜晚深蓝
+     夜间压暗深度封顶在 21:30 左右（star≈0.965），后半夜不再继续变深，保证山体始终可辨 */
   const duskW = Math.min(1,
-    Math.exp(-Math.pow(hour - 6.1, 2) / 0.9) + Math.exp(-Math.pow(hour - 18.3, 2) / 0.9)) * (1 - n);
+    Math.exp(-Math.pow(hour - 6.1, 2) / 0.9) + Math.exp(-Math.pow(hour - 18.3, 2) / 0.9));
+  const nNight = Math.min(pal.star, 0.965);
+  const tint = mix(mix([255, 250, 244], [255, 176, 120], duskW * 0.8), pal.sky[0], nNight * 0.94);
 
-  /* 夜晚使用提亮的夜蓝而非近黑，避免画面死黑丢细节 */
-  const topTint = mix(mix([255, 250, 244], [255, 183, 130], duskW * 0.55), [86, 106, 156], n);
-  const botTint = mix(mix([255, 250, 244], [255, 152, 96], duskW * 0.95), [46, 58, 100], n);
-
-  /* 背景天空（素材）+ 竖向渐变光影 */
+  /* 背景天空（素材）+ 整体光影色调 */
   if (bgReady) drawCover(ctx, bgImg);
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, css(topTint));
-  g.addColorStop(1, css(botTint));
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = g;
+  ctx.fillStyle = css(tint);
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
 
-  /* 夜晚月光氛围：screen 冷光提亮天空，山体保持深色剪影，拉开层次 */
-  if (n > 0.02) {
-    const mg = ctx.createLinearGradient(0, 0, 0, H * 0.78);
-    mg.addColorStop(0, cssA([64, 88, 140], 0.34 * n));
-    mg.addColorStop(1, cssA([24, 34, 66], 0));
-    ctx.globalCompositeOperation = 'screen';
-    ctx.fillStyle = mg;
-    ctx.fillRect(0, 0, W, H * 0.78);
-    ctx.globalCompositeOperation = 'source-over';
+  /* 星空（夜，位于山体之后） */
+  if (pal.star > 0.02) {
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      const a = pal.star * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+      if (a < 0.04) continue;
+      const x = s.x * W, y = s.y * H;
+      ctx.fillStyle = cssA([235, 240, 255], a * 0.95);
+      ctx.beginPath();
+      ctx.arc(x, y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (s.big && a > 0.35) {
+        ctx.strokeStyle = cssA([235, 240, 255], a * 0.45);
+        ctx.lineWidth = 1;
+        const L = s.r * 5;
+        ctx.beginPath();
+        ctx.moveTo(x - L, y); ctx.lineTo(x + L, y);
+        ctx.moveTo(x, y - L); ctx.lineTo(x, y + L);
+        ctx.stroke();
+      }
+    }
   }
 
-  /* 前景山体（素材，带同步光影；夜间去饱和中和夕照） */
-  drawFgTinted(topTint, botTint, n * 0.55);
+  /* 流星 */
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const m = meteors[i];
+    if (m.life <= 0) { meteors.splice(i, 1); continue; }
+    const x2 = m.x - m.vx * 0.14, y2 = m.y - m.vy * 0.14;
+    const g2 = ctx.createLinearGradient(m.x, m.y, x2, y2);
+    g2.addColorStop(0, cssA([255, 255, 255], m.life * pal.star));
+    g2.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g2;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(m.x, m.y); ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  /* 前景山体（素材，带同步光影） */
+  drawFgTinted(tint);
+}
+
+/* ---------------- 更新逻辑 ---------------- */
+function updateWorld(pal, dt) {
+  /* 流星生成（深夜） */
+  if (pal.star > 0.55 && Math.random() < 0.005) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    meteors.push({
+      x: W * (0.15 + Math.random() * 0.7),
+      y: H * (0.05 + Math.random() * 0.22),
+      vx: (260 + Math.random() * 240) * dir,
+      vy: 110 + Math.random() * 90,
+      life: 1
+    });
+  }
+  for (let i = 0; i < meteors.length; i++) {
+    const m = meteors[i];
+    m.x += m.vx * dt; m.y += m.vy * dt; m.life -= dt * 1.15;
+  }
 }
 
 /* ---------------- DOM ---------------- */
@@ -334,12 +388,14 @@ function frame(ts) {
   if (!lastTs) lastTs = ts;
   const dt = Math.min(0.06, (ts - lastTs) / 1000);
   lastTs = ts;
+  tAnim += dt;
   if (demo) offsetMs += dt * 1000 * DEMO_SPEED;
 
   const now = new Date(Date.now() + offsetMs);
   const hour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   const pal = getPal(hour);
 
+  updateWorld(pal, dt);
   drawScene(hour, pal);
 
   const hh = pad(now.getHours()), mm = pad(now.getMinutes());
