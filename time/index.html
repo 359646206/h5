@@ -128,6 +128,7 @@ function mix(a, b, t) {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 function css(c) { return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; }
+function cssA(c, a) { return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')'; }
 function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 /* ---------------- 一天 24 小时的色彩关键帧 ---------------- */
@@ -217,7 +218,7 @@ resize();
 /* 前景山体离屏画布：绘制后叠加与背景一致的光影色调，并按山体透明度裁回 */
 const fgCv = document.createElement('canvas');
 const fctx = fgCv.getContext('2d');
-function drawFgTinted(tint) {
+function drawFgTinted(topTint, botTint, desat) {
   if (!fgReady) return;
   if (fgCv.width !== canvas.width || fgCv.height !== canvas.height) {
     fgCv.width = canvas.width;
@@ -230,9 +231,18 @@ function drawFgTinted(tint) {
   const dw = fgImg.width * s, dh = fgImg.height * s;
   const dx = (fgCv.width - dw) / 2, dy = (fgCv.height - dh) / 2;
   fctx.drawImage(fgImg, dx, dy, dw, dh);
+  const fg = fctx.createLinearGradient(0, 0, 0, fgCv.height);
+  fg.addColorStop(0, css(topTint));
+  fg.addColorStop(1, css(botTint));
   fctx.globalCompositeOperation = 'multiply';
-  fctx.fillStyle = css(tint);
+  fctx.fillStyle = fg;
   fctx.fillRect(0, 0, fgCv.width, fgCv.height);
+  /* 夜间降低山体饱和度，中和素材里自带的夕照橙色 */
+  if (desat > 0.01) {
+    fctx.globalCompositeOperation = 'saturation';
+    fctx.fillStyle = 'rgba(128,128,128,' + desat + ')';
+    fctx.fillRect(0, 0, fgCv.width, fgCv.height);
+  }
   fctx.globalCompositeOperation = 'destination-in';
   fctx.drawImage(fgImg, dx, dy, dw, dh);
   fctx.globalCompositeOperation = 'source-over';
@@ -249,20 +259,39 @@ function drawScene(hour, pal) {
   ctx.fillStyle = css(pal.sky[0]);
   ctx.fillRect(0, 0, W, H);
 
-  /* 光影随时间变化：白天原色 → 晨昏暖调 → 夜晚深蓝 */
+  /* 光影随时间变化（参考时光壁纸：黎明曙光 → 白天原色 → 黄昏暖调 → 蓝调星夜）
+     n: 0 白天 → 1 深夜；天空与山地分开调色，保留画面层次 */
+  const n = pal.star;
   const duskW = Math.min(1,
-    Math.exp(-Math.pow(hour - 6.1, 2) / 0.9) + Math.exp(-Math.pow(hour - 18.3, 2) / 0.9));
-  const tint = mix(mix([255, 250, 244], [255, 176, 120], duskW * 0.8), pal.sky[0], pal.star * 0.94);
+    Math.exp(-Math.pow(hour - 6.1, 2) / 0.9) + Math.exp(-Math.pow(hour - 18.3, 2) / 0.9)) * (1 - n);
 
-  /* 背景天空（素材）+ 整体光影色调 */
+  /* 夜晚使用提亮的夜蓝而非近黑，避免画面死黑丢细节 */
+  const topTint = mix(mix([255, 250, 244], [255, 183, 130], duskW * 0.55), [86, 106, 156], n);
+  const botTint = mix(mix([255, 250, 244], [255, 152, 96], duskW * 0.95), [46, 58, 100], n);
+
+  /* 背景天空（素材）+ 竖向渐变光影 */
   if (bgReady) drawCover(ctx, bgImg);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, css(topTint));
+  g.addColorStop(1, css(botTint));
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = css(tint);
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
 
-  /* 前景山体（素材，带同步光影） */
-  drawFgTinted(tint);
+  /* 夜晚月光氛围：screen 冷光提亮天空，山体保持深色剪影，拉开层次 */
+  if (n > 0.02) {
+    const mg = ctx.createLinearGradient(0, 0, 0, H * 0.78);
+    mg.addColorStop(0, cssA([64, 88, 140], 0.34 * n));
+    mg.addColorStop(1, cssA([24, 34, 66], 0));
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = mg;
+    ctx.fillRect(0, 0, W, H * 0.78);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* 前景山体（素材，带同步光影；夜间去饱和中和夕照） */
+  drawFgTinted(topTint, botTint, n * 0.55);
 }
 
 /* ---------------- DOM ---------------- */
