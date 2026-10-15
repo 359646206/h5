@@ -18,36 +18,6 @@
 
   #ui { position: fixed; inset: 0; pointer-events: none; color: #fff; }
 
-  #clockBox {
-    position: absolute; left: 0; right: 0;
-    top: max(7vh, calc(env(safe-area-inset-top) + 24px));
-    text-align: center;
-    text-shadow: 0 2px 24px rgba(0, 0, 30, 0.5);
-    animation: fadeDown 1.6s ease both;
-  }
-  @keyframes fadeDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
-  #time {
-    font-size: clamp(52px, 13vw, 112px);
-    font-weight: 200;
-    line-height: 1.05;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-  }
-  #date {
-    margin-top: 6px;
-    font-size: clamp(12px, 2.6vw, 15px);
-    letter-spacing: 0.35em;
-    opacity: 0.9;
-    text-indent: 0.35em;
-  }
-  #greet {
-    margin-top: 14px;
-    font-size: clamp(13px, 3vw, 17px);
-    letter-spacing: 0.3em;
-    text-indent: 0.3em;
-    opacity: 0.85;
-  }
-
   #panel {
     position: absolute; left: 50%; transform: translateX(-50%);
     bottom: max(calc(4vh + 100px), calc(env(safe-area-inset-bottom) + 120px));
@@ -110,11 +80,6 @@
 <canvas data-page-node-id="qzqMBtgbEsRlQHbBC4cON1" id="sky"></canvas>
 
 <div data-page-node-id="P0qHSyxwgeLlN81LI5PNQq" id="ui">
-  <div data-page-node-id="eHqkq1UYMzlr7aYPdHH5Ra" id="clockBox">
-    <div data-page-node-id="nwLDG3miwZIKAtOTTexniA" id="time"><!--pnid:zFIo5EVewi9k7HMCtwqm8b-->--:--</div>
-    <div data-page-node-id="7wyQJc4BuiwYjVRE0gKWz7" id="date"></div>
-    <div data-page-node-id="WDB7qw3si2JL9tiSpUG6vh" id="greet"></div>
-  </div>
   <div data-page-node-id="lCE2cE7m1efNXJC8C52y2Z" id="panel">
     <div data-page-node-id="cAwmVNsmfc7NSFZ2T30cqE" class="row">
       <span data-page-node-id="EVfgC70Zcr43PXiS834lAh" id="scrubLabel"><!--pnid:SqnRHs6pLBSI7WElgXqq0X-->--:--</span>
@@ -187,18 +152,6 @@ function getPal(hour) {
     glow: mix(a.glow, b.glow, t),
     star: a.star + (b.star - a.star) * t
   };
-}
-
-function getPeriod(h) {
-  if (h < 5)  return '深夜 · 夜深了，愿你好梦';
-  if (h < 7)  return '破晓 · 晨光熹微，黎明将至';
-  if (h < 9)  return '清晨 · 早上好，新的一天开始了';
-  if (h < 11) return '上午 · 上午好，保持好状态';
-  if (h < 13) return '正午 · 中午好，记得休息一下';
-  if (h < 17) return '下午 · 下午好，时光正好';
-  if (h < 19) return '黄昏 · 晚霞正美，黄昏将至';
-  if (h < 21) return '入夜 · 华灯初上，夜幕降临';
-  return '夜晚 · 夜色温柔，晚安';
 }
 
 /* ---------------- 画布与场景元素 ---------------- */
@@ -610,15 +563,11 @@ function updateWorld(hour, pal, dt) {
 }
 
 /* ---------------- DOM ---------------- */
-const elTime = document.getElementById('time');
-const elDate = document.getElementById('date');
-const elGreet = document.getElementById('greet');
 const elLabel = document.getElementById('scrubLabel');
 const slider = document.getElementById('scrub');
 const btnNow = document.getElementById('btnNow');
 const btnDemo = document.getElementById('btnDemo');
-const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
-let lastTimeStr = '', lastDateStr = '', lastGreetStr = '';
+let lastTimeStr = '';
 
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -655,14 +604,9 @@ function frame(ts) {
   const hh = pad(now.getHours()), mm = pad(now.getMinutes());
   const ts2 = hh + ':' + mm;
   if (ts2 !== lastTimeStr) {
-    elTime.textContent = ts2;
     elLabel.textContent = ts2;
     lastTimeStr = ts2;
   }
-  const ds = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 星期' + WEEK[now.getDay()];
-  if (ds !== lastDateStr) { elDate.textContent = ds; lastDateStr = ds; }
-  const gs = getPeriod(hour);
-  if (gs !== lastGreetStr) { elGreet.textContent = gs; lastGreetStr = gs; }
   if (!dragging) slider.value = now.getHours() * 60 + now.getMinutes();
 
   requestAnimationFrame(frame);
