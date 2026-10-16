@@ -19,6 +19,7 @@
   #ui { position: fixed; inset: 0; pointer-events: none; color: #fff; }
 
   #panel {
+    display: none;
     position: absolute; left: 50%; transform: translateX(-50%);
     bottom: max(calc(4vh + 100px), calc(env(safe-area-inset-bottom) + 120px));
     width: min(92vw, 560px);
@@ -39,10 +40,11 @@
     pointer-events: none;
   }
   #panelToggle {
+    display: none;
     position: absolute; right: 14px;
     bottom: max(calc(4vh + 42px), calc(env(safe-area-inset-bottom) + 62px));
     width: 38px; height: 38px; padding: 0;
-    display: flex; align-items: center; justify-content: center;
+    display: none; align-items: center; justify-content: center;
     border-radius: 50%;
     pointer-events: auto;
     animation: fadeToggle 1.6s 0.5s ease both;
@@ -191,8 +193,8 @@ const fgImg = new Image();
 let bgReady = false, fgReady = false;
 bgImg.onload = function () { bgReady = true; };
 fgImg.onload = function () { fgReady = true; };
-bgImg.src = 'bg.png';
-fgImg.src = 'fg.png';
+bgImg.src = 'bg.webp';
+fgImg.src = 'fg.webp';
 
 /* 等比铺满屏幕（cover），两张图同尺寸同构图，自然对齐 */
 function drawCover(g, img, dw0, dh0) {
