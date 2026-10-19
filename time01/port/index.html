@@ -3,13 +3,13 @@
 <head data-page-node-id="47Yz05j3GkDffd3GkZfr9L">
 <meta data-page-node-id="gjyBBXqmmD5GFxHx1YeuRX" charset="utf-8">
 <meta data-page-node-id="HGCvNK4sqYEsMpzc84jOC0" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" name="viewport">
-<meta data-page-node-id="SE4dDuo2KfgPlSTqPiCNtn" content="#000000" name="theme-color">
+<meta data-page-node-id="SE4dDuo2KfgPlSTqPiCNtn" content="#0b1026" name="theme-color">
 <title data-page-node-id="8rcceoVNC5ok2yb2JHqR45" data-pnid-children="e31GT6sB2EBMPzIS3IMuh9">时光 · 动态壁纸</title>
 <style data-page-node-id="OHv2OG4UvzEXqjfVgOyhA0" data-pnid-children="tcfleU3iuWTa7nnfUm32Si">
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
   body {
-    background: transparent;
+    background: #050816;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -187,21 +187,12 @@ const canvas = document.getElementById('sky');
 const ctx = canvas.getContext('2d');
 let W = 0, H = 0;
 
-/* ---------------- 素材图片（白天模式，叠加构成基础构图） ----------------
-   渲染循环在两张素材就绪（或确认加载失败）后才启动，
-   避免首帧用蓝色兜底色填充、素材到位后跳变造成"闪蓝" */
+/* ---------------- 素材图片（白天模式，叠加构成基础构图） ---------------- */
 const bgImg = new Image();
 const fgImg = new Image();
 let bgReady = false, fgReady = false;
-let pendingImgs = 2;
-function tryStartRender() {
-  pendingImgs--;
-  if (pendingImgs === 0) requestAnimationFrame(frame);
-}
-bgImg.onload = function () { bgReady = true; tryStartRender(); };
-bgImg.onerror = tryStartRender;
-fgImg.onload = function () { fgReady = true; tryStartRender(); };
-fgImg.onerror = tryStartRender;
+bgImg.onload = function () { bgReady = true; };
+fgImg.onload = function () { fgReady = true; };
 bgImg.src = 'bg.webp';
 fgImg.src = 'fg.webp';
 
@@ -419,7 +410,7 @@ function frame(ts) {
 
   requestAnimationFrame(frame);
 }
-/* 渲染由素材加载完成后的 tryStartRender() 启动 */
+requestAnimationFrame(frame);
 </script>
 <script>document.addEventListener('contextmenu', function(e){e.preventDefault();});</script>
 </body>
