@@ -7,9 +7,9 @@
 <title data-page-node-id="8rcceoVNC5ok2yb2JHqR45" data-pnid-children="e31GT6sB2EBMPzIS3IMuh9">时光 · 动态壁纸</title>
 <style data-page-node-id="OHv2OG4UvzEXqjfVgOyhA0" data-pnid-children="tcfleU3iuWTa7nnfUm32Si">
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
   body {
-    background: #050816;
+    background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -190,9 +190,6 @@ let W = 0, H = 0;
 /* ---------------- 素材图片（白天模式，叠加构成基础构图） ---------------- */
 const bgImg = new Image();
 const fgImg = new Image();
-let bgReady = false, fgReady = false;
-bgImg.onload = function () { bgReady = true; };
-fgImg.onload = function () { fgReady = true; };
 bgImg.src = 'bg.webp';
 fgImg.src = 'fg.webp';
 
@@ -242,7 +239,7 @@ resize();
 const fgCv = document.createElement('canvas');
 const fctx = fgCv.getContext('2d');
 function drawFgTinted(tint) {
-  if (!fgReady) return;
+  if (!fgImg.complete || !fgImg.naturalWidth) return;
   if (fgCv.width !== canvas.width || fgCv.height !== canvas.height) {
     fgCv.width = canvas.width;
     fgCv.height = canvas.height;
@@ -269,10 +266,7 @@ function drawFgTinted(tint) {
 function drawScene(hour, pal) {
   const t = tAnim;
   ctx.clearRect(0, 0, W, H);
-
-  /* 底色（素材加载前的兜底） */
-  ctx.fillStyle = css(pal.sky[0]);
-  ctx.fillRect(0, 0, W, H);
+  if (!bgImg.complete || !bgImg.naturalWidth) return;
 
   /* 光影随时间变化：白天原色 → 晨昏暖调 → 夜晚深蓝
      夜间压暗深度封顶在 21:30 左右（star≈0.965），后半夜不再继续变深，保证山体始终可辨 */
@@ -282,7 +276,7 @@ function drawScene(hour, pal) {
   const tint = mix(mix([255, 250, 244], [255, 176, 120], duskW * 0.8), pal.sky[0], nNight * 0.94);
 
   /* 背景天空（素材）+ 整体光影色调 */
-  if (bgReady) drawCover(ctx, bgImg);
+  drawCover(ctx, bgImg);
   ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = css(tint);
   ctx.fillRect(0, 0, W, H);
